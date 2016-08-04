@@ -1,0 +1,35 @@
+{
+  "name": "browser-simon",
+  "version": "0.0.1",
+  "description": "Simon memory game for the browser",
+  "keywords": [
+    "game",
+    "memory",
+    "simon"
+  ],
+  "homepage": "https://github.com/fasttime/Browser-Simon",
+  "bugs": {
+    "url": "https://github.com/fasttime/Browser-Simon/issues"
+  },
+  "license": "ISC",
+  "author": "Francesco Trotta <ft@fasttime.org> (https://github.com/fasttime)",
+  "files": [
+    "dist",
+    "index.html"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fasttime/Browser-Simon.git"
+  },
+  "scripts": {
+    "build": "npm install && grunt"
+  },
+  "devDependencies": {
+    "art-js": "~0.3.0",
+    "grunt": "~1.0.1",
+    "grunt-cli": "~1.2.0",
+    "grunt-contrib-concat": "~1.0.1",
+    "grunt-contrib-uglify": "~2.0.0",
+    "grunt-fasttime-lint": "~0.0.3"
+  }
+}
