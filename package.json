@@ -30,6 +30,7 @@
     "grunt-cli": "~1.2.0",
     "grunt-contrib-concat": "~1.0.1",
     "grunt-contrib-uglify": "~2.0.0",
-    "grunt-fasttime-lint": "~0.0.3"
+    "grunt-fasttime-lint": "~0.0.3",
+    "jscrewit": "~2.1.3"
   }
 }

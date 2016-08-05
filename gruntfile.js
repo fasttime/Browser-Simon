@@ -47,6 +47,19 @@ module.exports =
         grunt.loadNpmTasks('grunt-contrib-uglify');
         grunt.loadNpmTasks('grunt-fasttime-lint');
         
+        grunt.registerTask(
+            'jscrewit',
+            'Encode with JScrewIt.',
+            function ()
+            {
+                var JScrewIt = require('jscrewit');
+                var input = grunt.file.read('dist/simon.min.js');
+                var output = JScrewIt.encode(input, { features: 'COMPACT' });
+                grunt.file.write('dist/simon.screwed.js', output);
+                grunt.log.ok('Done.');
+            }
+        );
+        
         // Default task.
-        grunt.registerTask('default', ['fasttime_lint', 'concat', 'uglify']);
+        grunt.registerTask('default', ['fasttime_lint', 'concat', 'uglify', 'jscrewit']);
     };
