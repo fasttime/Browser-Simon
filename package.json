@@ -1,6 +1,6 @@
 {
   "name": "browser-simon",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Simon memory game for the browser",
   "keywords": [
     "game",
