@@ -14,6 +14,7 @@
   "license": "ISC",
   "author": "Francesco Trotta <ft@fasttime.org> (https://github.com/fasttime)",
   "files": [
+    "Play now!.svg",
     "dist",
     "index.html"
   ],

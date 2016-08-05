@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" height="47" width="226">
+    <text x="5" y="36" style="font: italic bold 36px Arial">Play now!</text>
+    <path d="M200 23h-20a20 20 0 0 1 20-20z" fill='#9F4'/>
+    <path d="M201 23v-20a20 20 0 0 1 20 20z" fill='#F44'/>
+    <path d="M200 24v20a20 20 0 0 1-20-20z" fill='#FF4'/>
+    <path d="M201 24h20a20 20 0 0 1-20 20z" fill='#49F'/>
+</svg>
