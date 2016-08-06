@@ -30,6 +30,7 @@
     "grunt": "~1.0.1",
     "grunt-cli": "~1.2.0",
     "grunt-closure-compiler": "0.0.21",
+    "grunt-contrib-clean": "~1.0.0",
     "grunt-contrib-concat": "~1.0.1",
     "grunt-fasttime-lint": "~0.0.5",
     "jscrewit": "~2.1.3"

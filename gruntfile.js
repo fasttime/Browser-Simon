@@ -8,6 +8,7 @@ module.exports =
         // Project configuration.
         grunt.initConfig(
             {
+                clean: { default: 'dist' },
                 'closure-compiler':
                 {
                     default:
@@ -47,6 +48,7 @@ module.exports =
         
         // These plugins provide necessary tasks.
         grunt.loadNpmTasks('grunt-closure-compiler');
+        grunt.loadNpmTasks('grunt-contrib-clean');
         grunt.loadNpmTasks('grunt-contrib-concat');
         grunt.loadNpmTasks('grunt-fasttime-lint');
         
@@ -66,6 +68,6 @@ module.exports =
         // Default task.
         grunt.registerTask(
             'default',
-            ['fasttime_lint', 'concat', 'closure-compiler', 'jscrewit']
+            ['fasttime_lint', 'clean', 'concat', 'closure-compiler', 'jscrewit']
         );
     };
