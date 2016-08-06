@@ -8,37 +8,46 @@ module.exports =
         // Project configuration.
         grunt.initConfig(
             {
+                'closure-compiler':
+                {
+                    default:
+                    {
+                        js: 'dist/simon.js',
+                        jsOutputFile: 'dist/simon.min.js',
+                        noreport: true,
+                        options:
+                        {
+                            compilation_level: 'ADVANCED_OPTIMIZATIONS',
+                            language_in: 'ECMASCRIPT6_STRICT'
+                        }
+                    }
+                },
                 concat:
                 {
                     default:
                     {
+                        dest: 'dist/simon.js',
+                        options: { stripBanners: true },
                         src:
                         [
                             'node_modules/art-js/lib/art.js',
                             'node_modules/art-js/lib/art.css.js',
                             'node_modules/art-js/lib/art.on.js',
                             'src/main.js'
-                        ],
-                        dest: 'dist/simon.js'
-                    },
-                    options: { stripBanners: true }
+                        ]
+                    }
                 },
                 fasttime_lint:
                 {
                     other: { src: ['*.js'] },
                     src: { options: { envs: ['browser', 'es6'] }, src: 'src/**/*.js' }
-                },
-                uglify:
-                {
-                    default: { files: { 'dist/simon.min.js': 'dist/simon.js' } },
-                    options: { compress: { collapse_vars: true, hoist_vars: true } }
                 }
             }
         );
         
         // These plugins provide necessary tasks.
+        grunt.loadNpmTasks('grunt-closure-compiler');
         grunt.loadNpmTasks('grunt-contrib-concat');
-        grunt.loadNpmTasks('grunt-contrib-uglify');
         grunt.loadNpmTasks('grunt-fasttime-lint');
         
         grunt.registerTask(
@@ -55,5 +64,8 @@ module.exports =
         );
         
         // Default task.
-        grunt.registerTask('default', ['fasttime_lint', 'concat', 'uglify', 'jscrewit']);
+        grunt.registerTask(
+            'default',
+            ['fasttime_lint', 'concat', 'closure-compiler', 'jscrewit']
+        );
     };

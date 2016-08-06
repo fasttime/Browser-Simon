@@ -2,6 +2,8 @@
 {
     'use strict';
     
+    var ART = 'art';
+    
     /**
      * Creates or modifies a node.
      *
@@ -11,7 +13,7 @@
      * A node, a function returning a node, or a string specifying the type of element to be created
      * using `document.createElement()`.
      *
-     * @param {...*} args
+     * @param {...*} [args]
      * Each additional argument may be a node to be appended to the taget node, a function to be
      * called with the target node as its only argument, an object whose properties shall be
      * assigned to the taget node, or a string of text to be appended to the target node.
@@ -20,8 +22,8 @@
      * @returns {Node} The node specified by the target.
      */
     
-    window.art =
-        function art(target)
+    window[ART] =
+        function (target)
         {
             var node;
             if (target instanceof Node)
@@ -208,7 +210,9 @@ art.on =
     {
         var id = newTimerId();
         timerDataMap.set(id, { callback: callback, once: false });
-        timerWorker.postMessage({ action: 'REPEAT', id: id, delay: delay, interval: interval });
+        timerWorker.postMessage(
+            { 'action': 'REPEAT', 'id': id, 'delay': delay, 'interval': interval }
+        );
         return id;
     }
     
@@ -216,14 +220,14 @@ art.on =
     {
         var id = newTimerId();
         timerDataMap.set(id, { callback: callback, once: true });
-        timerWorker.postMessage({ action: 'START', id: id, delay: delay });
+        timerWorker.postMessage({ 'action': 'START', 'id': id, 'delay': delay });
         return id;
     }
     
     function stopTimer(id)
     {
         if (timerDataMap.delete(id))
-            timerWorker.postMessage({ action: 'STOP', id: id });
+            timerWorker.postMessage({ 'action': 'STOP', 'id': id });
     }
     
     (function ()
@@ -235,7 +239,7 @@ art.on =
                 '{' +
                     'function notify()' +
                     '{' +
-                        'postMessage({id:id})' +
+                        'postMessage({id})' +
                     '}' +
                     'function startDelay(callback)' +
                     '{' +

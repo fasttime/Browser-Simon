@@ -26,12 +26,12 @@
     "build": "npm install && grunt"
   },
   "devDependencies": {
-    "art-js": "~0.3.0",
+    "art-js": "~0.4.1",
     "grunt": "~1.0.1",
     "grunt-cli": "~1.2.0",
+    "grunt-closure-compiler": "0.0.21",
     "grunt-contrib-concat": "~1.0.1",
-    "grunt-contrib-uglify": "~2.0.0",
-    "grunt-fasttime-lint": "~0.0.3",
+    "grunt-fasttime-lint": "~0.0.5",
     "jscrewit": "~2.1.3"
   }
 }

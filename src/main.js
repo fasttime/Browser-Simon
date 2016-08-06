@@ -23,7 +23,9 @@
     {
         var id = newTimerId();
         timerDataMap.set(id, { callback: callback, once: false });
-        timerWorker.postMessage({ action: 'REPEAT', id: id, delay: delay, interval: interval });
+        timerWorker.postMessage(
+            { 'action': 'REPEAT', 'id': id, 'delay': delay, 'interval': interval }
+        );
         return id;
     }
     
@@ -31,14 +33,14 @@
     {
         var id = newTimerId();
         timerDataMap.set(id, { callback: callback, once: true });
-        timerWorker.postMessage({ action: 'START', id: id, delay: delay });
+        timerWorker.postMessage({ 'action': 'START', 'id': id, 'delay': delay });
         return id;
     }
     
     function stopTimer(id)
     {
         if (timerDataMap.delete(id))
-            timerWorker.postMessage({ action: 'STOP', id: id });
+            timerWorker.postMessage({ 'action': 'STOP', 'id': id });
     }
     
     (function ()
@@ -50,7 +52,7 @@
                 '{' +
                     'function notify()' +
                     '{' +
-                        'postMessage({id:id})' +
+                        'postMessage({id})' +
                     '}' +
                     'function startDelay(callback)' +
                     '{' +
