@@ -12,32 +12,26 @@ module.exports =
                 {
                     default:
                     {
-                        src: ['node_modules/art-js/lib/art.js', 'src/main.js'],
+                        src:
+                        [
+                            'node_modules/art-js/lib/art.js',
+                            'node_modules/art-js/lib/art.css.js',
+                            'node_modules/art-js/lib/art.on.js',
+                            'src/main.js'
+                        ],
                         dest: 'dist/simon.js'
                     },
                     options: { stripBanners: true }
                 },
                 fasttime_lint:
                 {
-                    src:
-                    {
-                        options: { envs: ['browser', 'es6'] },
-                        src: 'src/**/*.js'
-                    },
-                    other: { src: ['*.js'] }
+                    other: { src: ['*.js'] },
+                    src: { options: { envs: ['browser', 'es6'] }, src: 'src/**/*.js' }
                 },
                 uglify:
                 {
                     default: { files: { 'dist/simon.min.js': 'dist/simon.js' } },
-                    options:
-                    {
-                        compress:
-                        {
-                            collapse_vars: true,
-                            global_defs: { _ART_css: true, _ART_on: true },
-                            hoist_vars: true
-                        }
-                    }
+                    options: { compress: { collapse_vars: true, hoist_vars: true } }
                 }
             }
         );
