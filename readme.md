@@ -6,7 +6,7 @@ JavaScript, with no static CSS or resource files and only minimal HTML.
 
 [![Play now!](https://rawgit.com/fasttime/Browser-Simon/master/Play%20now!.svg)](https://fasttime.github.io/Browser-Simon/)
 
-**Browser Simon** is distributed in three functionally equvalent versions.
+**Browser Simon** is distributed in three functionally equivalent versions.
 
 * **dist/simon.js**: The unaltered debug version. 
 * **dist/simon.min.js**: The compressed version. 
