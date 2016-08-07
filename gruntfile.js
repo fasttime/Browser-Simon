@@ -2,6 +2,10 @@
 
 'use strict';
 
+var SIMON_JS            = 'dist/simon.js';
+var SIMON_MIN_JS        = 'dist/simon.min.js';
+var SIMON_SCREWED_JS    = 'dist/simon.screwed.js';
+
 module.exports =
     function (grunt)
     {
@@ -13,21 +17,17 @@ module.exports =
                 {
                     default:
                     {
-                        js: 'dist/simon.js',
-                        jsOutputFile: 'dist/simon.min.js',
+                        js: SIMON_JS,
+                        jsOutputFile: SIMON_MIN_JS,
                         noreport: true,
-                        options:
-                        {
-                            compilation_level: 'ADVANCED_OPTIMIZATIONS',
-                            language_in: 'ECMASCRIPT6_STRICT'
-                        }
+                        options: { compilation_level: 'ADVANCED_OPTIMIZATIONS' }
                     }
                 },
                 concat:
                 {
                     default:
                     {
-                        dest: 'dist/simon.js',
+                        dest: SIMON_JS,
                         options: { stripBanners: true },
                         src:
                         [
@@ -58,9 +58,9 @@ module.exports =
             function ()
             {
                 var JScrewIt = require('jscrewit');
-                var input = grunt.file.read('dist/simon.min.js');
+                var input = grunt.file.read(SIMON_MIN_JS);
                 var output = JScrewIt.encode(input, { features: 'COMPACT' });
-                grunt.file.write('dist/simon.screwed.js', output);
+                grunt.file.write(SIMON_SCREWED_JS, output);
                 grunt.log.ok('Done.');
             }
         );
