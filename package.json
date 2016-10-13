@@ -1,6 +1,6 @@
 {
   "name": "browser-simon",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Simon memory game for the browser",
   "keywords": [
     "game",
@@ -33,6 +33,6 @@
     "grunt-contrib-clean": "~1.0.0",
     "grunt-contrib-concat": "~1.0.1",
     "grunt-fasttime-lint": "~0.0.5",
-    "jscrewit": "~2.1.3"
+    "jscrewit": "~2.3.0"
   }
 }

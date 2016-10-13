@@ -6,10 +6,10 @@
     
     // Timer //
     
-    var timerDataMap = new Map();
-    var timerWorker;
+    let timerDataMap = new Map();
+    let timerWorker;
     
-    var lastTimerId;
+    let lastTimerId;
     
     function newTimerId()
     {
@@ -21,7 +21,7 @@
     
     function repeatTimer(callback, delay, interval)
     {
-        var id = newTimerId();
+        let id = newTimerId();
         timerDataMap.set(id, { callback: callback, once: false });
         timerWorker.postMessage(
             { 'action': 'REPEAT', 'id': id, 'delay': delay, 'interval': interval }
@@ -31,7 +31,7 @@
     
     function startTimer(callback, delay)
     {
-        var id = newTimerId();
+        let id = newTimerId();
         timerDataMap.set(id, { callback: callback, once: true });
         timerWorker.postMessage({ 'action': 'START', 'id': id, 'delay': delay });
         return id;
@@ -45,37 +45,32 @@
     
     (function ()
     {
-        var script =
-            'var idMap=new Map;' +
+        let script =
+            'let idMap=new Map;' +
             'onmessage=' +
-                'function(event)' +
+                'event=>' +
                 '{' +
-                    'function notify()' +
-                    '{' +
-                        'postMessage({id})' +
-                    '}' +
-                    'function startDelay(callback)' +
-                    '{' +
-                        'idMap.set(id,setTimeout(function(){callback();notify()},data.delay))' +
-                    '}' +
-                    'var data=event.data,id=data.id;' +
+                    'let notify=()=>postMessage({id});' +
+                    'let startDelay=callback=>' +
+                        'idMap.set(id,setTimeout(()=>{callback();notify()},data.delay));' +
+                    'let data=event.data,id=data.id;' +
                     'switch(data.action)' +
                     '{' +
                     'case"START":' +
-                        'startDelay(function(){idMap.delete(id)});' +
+                        'startDelay(()=>idMap.delete(id));' +
                         'break;' +
                     'case"REPEAT":' +
-                        'startDelay(function(){idMap.set(id,setInterval(notify,data.interval))});' +
+                        'startDelay(()=>idMap.set(id,setInterval(notify,data.interval)));' +
                         'break;' +
                     'case"STOP":' +
-                        'var nativeId=idMap.get(id);' +
+                        'let nativeId=idMap.get(id);' +
                         'idMap.delete(id);' +
                         'clearTimeout(nativeId);' +
                         'break;' +
                     '}' +
                 '}';
-        var blob = new Blob([script]);
-        var strUrl = URL.createObjectURL(blob);
+        let blob = new Blob([script]);
+        let strUrl = URL.createObjectURL(blob);
         timerWorker = new Worker(strUrl);
     }
     )();
@@ -83,11 +78,11 @@
     timerWorker.onmessage =
         function (event)
         {
-            var id = event.data.id;
-            var timerData = timerDataMap.get(id);
+            let id = event.data.id;
+            let timerData = timerDataMap.get(id);
             if (timerData)
             {
-                var callback = timerData.callback;
+                let callback = timerData.callback;
                 if (timerData.once)
                     timerDataMap.delete(id);
                 callback();
@@ -96,7 +91,7 @@
     
     // Task //
     
-    var tasks = new Set();
+    let tasks = new Set();
     
     function Task(job)
     {
@@ -107,7 +102,7 @@
     Task.create =
         function (job)
         {
-            var task = new Task(job);
+            let task = new Task(job);
             return task;
         };
     
@@ -125,7 +120,7 @@
     Task.prototype.do =
         function ()
         {
-            var job = this.job;
+            let job = this.job;
             if (job)
             {
                 stopTimer(this.timerId);
@@ -139,8 +134,8 @@
     Task.prototype.doAfter =
         function (millisecs)
         {
-            var task = this;
-            var job = task.job;
+            let task = this;
+            let job = task.job;
             if (job)
             {
                 stopTimer(task.timerId);
@@ -157,15 +152,15 @@
     
     // Square Wave Beep //
     
-    var audioCtx = new (window.AudioContext || window.webkitAudioContext);
+    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
-    var stopBeepTask = null;
+    let stopBeepTask = null;
     
     function startBeep(frequency)
     {
         if (stopBeepTask)
             stopBeepTask.do();
-        var oscillator = audioCtx.createOscillator();
+        let oscillator = audioCtx.createOscillator();
         oscillator.connect(audioCtx.destination);
         oscillator.frequency.value = frequency;
         oscillator.type = 'square';
@@ -188,14 +183,14 @@
     
     // Simon //
     
-    var roundSpan;
-    var statusBlock;
-    var tileBoard;
+    let roundSpan;
+    let statusBlock;
+    let tileBoard;
     
-    var boardReady = false;
-    var releaseTileTask = null;
-    var seqIndex;
-    var sequence;
+    let boardReady = false;
+    let releaseTileTask = null;
+    let seqIndex;
+    let sequence;
     
     function gameOver()
     {
@@ -221,15 +216,15 @@
         if (boardReady && !releaseTileTask)
         {
             Task.doAll();
-            var classList = this.classList;
+            let classList = this.classList;
             classList.add('down');
             if (evt.type === 'mousedown') // no transition on touch
                 classList.add('smooth');
-            var expectedTile = sequence[seqIndex++];
+            let expectedTile = sequence[seqIndex++];
             if (this === expectedTile)
             {
-                var frequency = this.dataset.frequency;
-                var oscillator = startBeep(frequency);
+                let frequency = this.dataset.frequency;
+                let oscillator = startBeep(frequency);
                 releaseTileTask =
                     Task.create(
                         function ()
@@ -271,7 +266,7 @@
             art.on('touchend', handleOffEvents)
         );
         
-        var header =
+        let header =
             art(
                 'H1',
                 {
@@ -283,7 +278,7 @@
             );
         
         tileBoard = art('DIV');
-        var gameBoard =
+        let gameBoard =
             art(
                 'DIV',
                 { style: { position: 'relative',  width: '300px', height: '300px' } },
@@ -304,7 +299,7 @@
             { transition: 'background 120ms ease, box-shadow 120ms ease, margin 120ms ease' }
         );
         art.css('.ready *', { cursor: 'pointer' });
-        var tileInfos =
+        let tileInfos =
         [
             {
                 name:       'green',
@@ -335,12 +330,12 @@
                 shadow:     '#2E67AB',
             },
         ];
-        var keyframesRuleObj = { };
+        let keyframesRuleObj = { };
         tileInfos.forEach(
             function (tileInfo, index)
             {
-                var name = tileInfo.name;
-                var tile =
+                let name = tileInfo.name;
+                let tile =
                     art(
                         'DIV',
                         { className: 'tile ' + name, dataset: { frequency: tileInfo.frequency } },
@@ -348,13 +343,13 @@
                         art.on('touchstart', handleOnEvents),
                         art.on('mouseout', handleOffEvents)
                     );
-                var borderRadii = [0, 0, 0, 0];
-                var circularIndex = index ^ index >> 1;
+                let borderRadii = [0, 0, 0, 0];
+                let circularIndex = index ^ index >> 1;
                 borderRadii[circularIndex] = '145px';
-                var borderRadius = borderRadii.join(' ');
-                var background = tileInfo.background;
-                var lit = tileInfo.lit;
-                var shadow = tileInfo.shadow;
+                let borderRadius = borderRadii.join(' ');
+                let background = tileInfo.background;
+                let lit = tileInfo.lit;
+                let shadow = tileInfo.shadow;
                 art.css(
                     '.' + name,
                     {
@@ -379,9 +374,9 @@
         keyframesRuleObj['100%'] = keyframesRuleObj['0%'];
         art.css.keyframes('start', keyframesRuleObj);
         
-        var startButton =
+        let startButton =
             art('DIV', { className: 'start' }, 'Start', art.on('click', handleStartButtonClick));
-        var startLayer =
+        let startLayer =
             art(
                 'DIV',
                 { className: 'startLayer' },
@@ -444,7 +439,7 @@
         
         roundSpan = art('SPAN', '—');
         statusBlock = art('H2', { style: { textAlign: 'center' } }, 'Hello');
-        var footer =
+        let footer =
             art(
                 'FOOTER',
                 {
@@ -484,11 +479,11 @@
         {
             if (seqIndex < round)
             {
-                var tile = sequence[seqIndex++];
-                var frequency = tile.dataset.frequency;
-                var oscillator = startBeep(frequency);
+                let tile = sequence[seqIndex++];
+                let frequency = tile.dataset.frequency;
+                let oscillator = startBeep(frequency);
                 stopBeep(oscillator, interval - 50);
-                var classList = tile.classList;
+                let classList = tile.classList;
                 classList.add('lit');
                 Task.create(
                     function ()
@@ -504,11 +499,11 @@
         seqIndex = 0;
         setBoardStatus(false, 'Look', '');
         sequence.push(randomTile());
-        var round = sequence.length;
+        let round = sequence.length;
         roundSpan.textContent = round;
-        var interval = round > 13 ? 270 : round > 5 ? 370 : 470;
-        var timer = repeatTimer(callback, 800, interval);
-        var boardReadyTask =
+        let interval = round > 13 ? 270 : round > 5 ? 370 : 470;
+        let timer = repeatTimer(callback, 800, interval);
+        let boardReadyTask =
             Task.create(
                 function ()
                 {
@@ -522,7 +517,7 @@
     
     function randomTile()
     {
-        var tile = tileBoard.children[Math.random() * 4 ^ 0];
+        let tile = tileBoard.children[Math.random() * 4 ^ 0];
         return tile;
     }
     
@@ -536,13 +531,13 @@
     
     function startWasteOfTime()
     {
-        var timerId =
+        let timerId =
             startTimer(
                 function ()
                 {
                     timerId = void 0;
-                    var tile = sequence[seqIndex];
-                    var classList = tile.classList;
+                    let tile = sequence[seqIndex];
+                    let classList = tile.classList;
                     classList.add('lit');
                     Task.create(
                         function ()
