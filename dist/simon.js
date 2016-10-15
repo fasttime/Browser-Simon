@@ -602,9 +602,7 @@ art.on =
         art.css(
             '.start:active',
             {
-                'animation-duration': '1.5s',
-                'animation-iteration-count': 'infinite',
-                'animation-name': 'start',
+                'animation': 'start 1.5s infinite',
                 'border-left-color': '#AAA',
                 'border-right-color': '#DDD',
                 'border-top-color': '#AAA',
