@@ -23,16 +23,16 @@
     "url": "https://github.com/fasttime/Browser-Simon.git"
   },
   "scripts": {
-    "build": "npm install && grunt"
+    "build": "npm install && gulp"
   },
   "devDependencies": {
-    "art-js": "~0.4.1",
-    "grunt": "~1.0.1",
-    "grunt-cli": "~1.2.0",
-    "grunt-closure-compiler": "0.0.21",
-    "grunt-contrib-clean": "~1.0.0",
-    "grunt-contrib-concat": "~1.0.1",
-    "grunt-fasttime-lint": "~0.0.5",
-    "jscrewit": "~2.3.0"
+    "art-js": "~0.6.0",
+    "google-closure-compiler-js": "~20161201.0.0",
+    "gulp": "~3.9.1",
+    "gulp-concat": "~2.6.1",
+    "gulp-fasttime-lint": "~0.1.1",
+    "gulp-replace": "~0.5.4",
+    "jscrewit": "~2.5.0",
+    "run-sequence": "~1.2.2"
   }
 }
