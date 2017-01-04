@@ -6,9 +6,14 @@
     
     // Timer //
     
+    const ACTION_KEY    = 'action';
     const DELAY_KEY     = 'delay';
     const ID_KEY        = 'id';
     const INTERVAL_KEY  = 'interval';
+    
+    const ACTION_VALUE_REPEAT   = 'REPAEAT';
+    const ACTION_VALUE_START    = 'START';
+    const ACTION_VALUE_STOP     = 'STOP';
     
     const timerDataMap = new Map();
     let timerWorker;
@@ -28,7 +33,12 @@
         const id = newTimerId();
         timerDataMap.set(id, { callback, once: false });
         timerWorker.postMessage(
-            { 'action': 'REPEAT', [ID_KEY]: id, [DELAY_KEY]: delay, [INTERVAL_KEY]: interval }
+            {
+                [ACTION_KEY]: ACTION_VALUE_REPEAT,
+                [ID_KEY]: id,
+                [DELAY_KEY]: delay,
+                [INTERVAL_KEY]: interval
+            }
         );
         return id;
     }
@@ -37,14 +47,16 @@
     {
         const id = newTimerId();
         timerDataMap.set(id, { callback, once: true });
-        timerWorker.postMessage({ 'action': 'START', [ID_KEY]: id, [DELAY_KEY]: delay });
+        timerWorker.postMessage(
+            { [ACTION_KEY]: ACTION_VALUE_START, [ID_KEY]: id, [DELAY_KEY]: delay }
+        );
         return id;
     }
     
     function stopTimer(id)
     {
         if (timerDataMap.delete(id))
-            timerWorker.postMessage({ 'action': 'STOP', [ID_KEY]: id });
+            timerWorker.postMessage({ [ACTION_KEY]: ACTION_VALUE_STOP, [ID_KEY]: id });
     }
     
     {
@@ -57,15 +69,15 @@
                     'let startDelay=callback=>' +
                         `idMap.set(id,setTimeout(()=>{callback();notify()},data.${DELAY_KEY}));` +
                     `let data=event.data,id=data.${ID_KEY};` +
-                    'switch(data.action)' +
+                    `switch(data.${ACTION_KEY})` +
                     '{' +
-                    'case"START":' +
+                    `case"${ACTION_VALUE_START}":` +
                         'startDelay(()=>idMap.delete(id));' +
                         'break;' +
-                    'case"REPEAT":' +
+                    `case"${ACTION_VALUE_REPEAT}":` +
                         `startDelay(()=>idMap.set(id,setInterval(notify,data.${INTERVAL_KEY})));` +
                         'break;' +
-                    'case"STOP":' +
+                    `case"${ACTION_VALUE_STOP}":` +
                         'let nativeId=idMap.get(id);' +
                         'idMap.delete(id);' +
                         'clearTimeout(nativeId);' +
@@ -336,11 +348,11 @@
         tileInfos.forEach(
             (tileInfo, index) =>
             {
-                const name = tileInfo.name;
+                const { background, frequency, lit, name, shadow } = tileInfo;
                 const tile =
                     art(
                         'DIV',
-                        { className: `tile ${name}`, dataset: { frequency: tileInfo.frequency } },
+                        { className: `tile ${name}`, dataset: { frequency } },
                         art.on('mousedown', handleOnEvents),
                         art.on('touchstart', handleOnEvents),
                         art.on('mouseout', handleOffEvents)
@@ -349,25 +361,22 @@
                 const circularIndex = index ^ index >> 1;
                 borderRadii[circularIndex] = '145px';
                 const borderRadius = borderRadii.join(' ');
-                const background = tileInfo.background;
-                const lit = tileInfo.lit;
-                const shadow = tileInfo.shadow;
                 art.css(
                     `.${name}`,
                     {
                         background,
                         'border-radius': borderRadius,
-                        left: `${150 * (index & 1)}px`,
-                        top: `${150 * (index >> 1)}px`
+                        'left': `${150 * (index & 1)}px`,
+                        'top': `${150 * (index >> 1)}px`
                     }
                 );
                 art.css(
                     `.down.${name}`,
-                    { background: lit, 'box-shadow': `2px 2px 2.5px ${shadow}` }
+                    { 'background': lit, 'box-shadow': `2px 2px 2.5px ${shadow}` }
                 );
                 art.css(
                     `.lit.${name}`,
-                    { background: lit, 'box-shadow': `5px 5px 2.5px ${shadow}` }
+                    { 'background': lit, 'box-shadow': `5px 5px 2.5px ${shadow}` }
                 );
                 art(tileBoard, tile);
                 keyframesRuleObj[`${25 * circularIndex}%`] = { color: lit };
@@ -401,40 +410,29 @@
             '.start',
             {
                 'align-items': 'center',
-                background: '#B0C4DE',
+                'background': '#B0C4DE',
                 'border-width': '2px',
-                color: '#434A54',
-                cursor: 'pointer',
-                display: 'flex',
-                font: 'bold 20px Verdana',
+                'color': '#434A54',
+                'cursor': 'pointer',
+                'display': 'flex',
+                'font': 'bold 20px Verdana',
                 'justify-content': 'center',
                 'letter-spacing': '1px',
-                margin: '3px',
-                width: '92px',
-                height: '92px',
+                'margin': '3px',
+                'width': '92px',
+                'height': '92px',
             }
         );
         art.css(
             '.start:active',
-            {
-                'animation-duration': '1.5s',
-                'animation-iteration-count': 'infinite',
-                'animation-name': 'start',
-                'border-left-color': '#AAA',
-                'border-right-color': '#DDD',
-                'border-top-color': '#AAA',
-                'border-bottom-color': '#DDD',
-            }
+            { 'animation': 'start 1.5s infinite', 'border-color': '#AAA #DDD #DDD #AAA' }
         );
         art.css(
             '.start,.startLayer',
             {
+                'border-color': '#DDD #AAA #AAA #DDD',
                 'border-radius': '100%',
                 'border-style': 'solid',
-                'border-left-color': '#DDD',
-                'border-right-color': '#AAA',
-                'border-top-color': '#DDD',
-                'border-bottom-color': '#AAA',
                 'box-sizing': 'border-box',
             }
         );
@@ -471,7 +469,13 @@
                     WebkitUserSelect: 'none',
                 }
             },
-            art('DIV', { style: { margin: '0 auto', width: '300px' } }, header, gameBoard, footer)
+            art(
+                'DIV',
+                { style: { cursor: 'default', margin: '0 auto', width: '300px' } },
+                header,
+                gameBoard,
+                footer
+            )
         );
     }
     
