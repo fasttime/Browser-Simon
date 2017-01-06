@@ -26,7 +26,7 @@
     "build": "npm install && gulp"
   },
   "devDependencies": {
-    "art-js": "~0.6.0",
+    "art-js": "~0.6.1",
     "google-closure-compiler-js": "~20161201.0.0",
     "gulp": "~3.9.1",
     "gulp-concat": "~2.6.1",
