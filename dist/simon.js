@@ -13,7 +13,7 @@
      * A node, a function returning a node, or a string specifying the type of element to be created
      * using `document.createElement()`.
      *
-     * @param {...*} [args]
+     * @param {...*} [arguments]
      * Each additional argument may be a node to be appended to the taget node, a function to be
      * called with the target node as its only argument, an object whose properties shall be
      * assigned to the taget node, or a string of text to be appended to the target node.
@@ -71,24 +71,63 @@
             }
         );
     }
-}
-)();
-
-(function ()
-{
-    'use strict';
+    
+    /**
+     * Returns a callback that can be used to attach a listener to the target node in a call to
+     * {@link art `art()`}.
+     * The arguments are the same as in `EventTarget.addEventListener()`, except that the argument
+     * `type` may be an array specifying multiple event types.
+     *
+     * @function art.on
+     *
+     * @param {string|Array<string>} type
+     * A string or array of strings specifing the event types to listen for.
+     *
+     * @param {Function|EventListener} listener
+     * The event handler to associate with the events.
+     *
+     * @param {boolean=} useCapture
+     * `true` to register the events for the capturing phase, or `false` to register the events for
+     * the bubbling phase.
+     *
+     * @returns {Function}
+     */
+    
+    art.on =
+        function (type, listener, useCapture)
+        {
+            var processEventListener =
+                createProcessEventListener(type, listener, useCapture, 'addEventListener');
+            return processEventListener;
+        };
+    
+    function createProcessEventListener(type, listener, useCapture, methodName)
+    {
+        function processEventListener(target)
+        {
+            function callback(thisType)
+            {
+                target[methodName](thisType, listener, useCapture);
+            }
+            
+            if (Array.isArray(type))
+                type.forEach(callback);
+            else
+                callback(type);
+        }
+        
+        return processEventListener;
+    }
     
     /**
      * Creates a new CSS rule and adds it to the document.
      *
      * @function art.css
      *
-     * @requires art.css.js
-     *
      * @param {string} selector
      * The selector of the new rule.
      *
-     * @param {object} ruleObj
+     * @param {Object} ruleObj
      * A rule definition object mapping style names to their respective values.
      */
     
@@ -104,12 +143,10 @@
      *
      * @function art.css.keyframes
      *
-     * @requires art.css.js
-     *
      * @param {string} identifier
      * The new keyframes rule identifier.
      *
-     * @param {object} ruleObj
+     * @param {Object} ruleObj
      * An object mapping selectors to rule definition objects.
      * Rule definition objects map style names to their respective values.
      */
@@ -166,34 +203,22 @@
 }
 )();
 
-art.on =
-        function (type, listener, useCapture)
-        {
-            'use strict';
-            
-            function addEventListener(target)
-            {
-                function callback(type)
-                {
-                    target.addEventListener(type, listener, useCapture);
-                }
-                
-                if (Array.isArray(type))
-                    type.forEach(callback);
-                else
-                    callback(type);
-            }
-            
-            return addEventListener;
-        };
-
-(function ()
+(() =>
 {
     'use strict';
     
     // Timer //
     
-    let timerDataMap = new Map();
+    const ACTION_KEY    = 'action';
+    const DELAY_KEY     = 'delay';
+    const ID_KEY        = 'id';
+    const INTERVAL_KEY  = 'interval';
+    
+    const ACTION_VALUE_REPEAT   = 'REPAEAT';
+    const ACTION_VALUE_START    = 'START';
+    const ACTION_VALUE_STOP     = 'STOP';
+    
+    const timerDataMap = new Map();
     let timerWorker;
     
     let lastTimerId;
@@ -208,68 +233,73 @@ art.on =
     
     function repeatTimer(callback, delay, interval)
     {
-        let id = newTimerId();
-        timerDataMap.set(id, { callback: callback, once: false });
+        const id = newTimerId();
+        timerDataMap.set(id, { callback, once: false });
         timerWorker.postMessage(
-            { 'action': 'REPEAT', 'id': id, 'delay': delay, 'interval': interval }
+            {
+                [ACTION_KEY]: ACTION_VALUE_REPEAT,
+                [ID_KEY]: id,
+                [DELAY_KEY]: delay,
+                [INTERVAL_KEY]: interval
+            }
         );
         return id;
     }
     
     function startTimer(callback, delay)
     {
-        let id = newTimerId();
-        timerDataMap.set(id, { callback: callback, once: true });
-        timerWorker.postMessage({ 'action': 'START', 'id': id, 'delay': delay });
+        const id = newTimerId();
+        timerDataMap.set(id, { callback, once: true });
+        timerWorker.postMessage(
+            { [ACTION_KEY]: ACTION_VALUE_START, [ID_KEY]: id, [DELAY_KEY]: delay }
+        );
         return id;
     }
     
     function stopTimer(id)
     {
         if (timerDataMap.delete(id))
-            timerWorker.postMessage({ 'action': 'STOP', 'id': id });
+            timerWorker.postMessage({ [ACTION_KEY]: ACTION_VALUE_STOP, [ID_KEY]: id });
     }
     
-    (function ()
     {
-        let script =
+        const script =
             'let idMap=new Map;' +
             'onmessage=' +
                 'event=>' +
                 '{' +
                     'let notify=()=>postMessage({id});' +
                     'let startDelay=callback=>' +
-                        'idMap.set(id,setTimeout(()=>{callback();notify()},data.delay));' +
-                    'let data=event.data,id=data.id;' +
-                    'switch(data.action)' +
+                        `idMap.set(id,setTimeout(()=>{callback();notify()},data.${DELAY_KEY}));` +
+                    `let data=event.data,id=data.${ID_KEY};` +
+                    `switch(data.${ACTION_KEY})` +
                     '{' +
-                    'case"START":' +
+                    `case"${ACTION_VALUE_START}":` +
                         'startDelay(()=>idMap.delete(id));' +
                         'break;' +
-                    'case"REPEAT":' +
-                        'startDelay(()=>idMap.set(id,setInterval(notify,data.interval)));' +
+                    `case"${ACTION_VALUE_REPEAT}":` +
+                        `startDelay(()=>idMap.set(id,setInterval(notify,data.${INTERVAL_KEY})));` +
                         'break;' +
-                    'case"STOP":' +
+                    `case"${ACTION_VALUE_STOP}":` +
                         'let nativeId=idMap.get(id);' +
                         'idMap.delete(id);' +
                         'clearTimeout(nativeId);' +
                         'break;' +
                     '}' +
                 '}';
-        let blob = new Blob([script]);
-        let strUrl = URL.createObjectURL(blob);
+        const blob = new Blob([script]);
+        const strUrl = URL.createObjectURL(blob);
         timerWorker = new Worker(strUrl);
     }
-    )();
     
     timerWorker.onmessage =
-        function (event)
+        event =>
         {
-            let id = event.data.id;
-            let timerData = timerDataMap.get(id);
+            const id = event.data.id;
+            const timerData = timerDataMap.get(id);
             if (timerData)
             {
-                let callback = timerData.callback;
+                const callback = timerData.callback;
                 if (timerData.once)
                     timerDataMap.delete(id);
                 callback();
@@ -278,7 +308,7 @@ art.on =
     
     // Task //
     
-    let tasks = new Set();
+    const tasks = new Set();
     
     function Task(job)
     {
@@ -287,17 +317,17 @@ art.on =
     }
     
     Task.create =
-        function (job)
+        job =>
         {
-            let task = new Task(job);
+            const task = new Task(job);
             return task;
         };
     
     Task.doAll =
-        function ()
+        () =>
         {
             tasks.forEach(
-                function (task)
+                task =>
                 {
                     task.do();
                 }
@@ -307,7 +337,7 @@ art.on =
     Task.prototype.do =
         function ()
         {
-            let job = this.job;
+            const job = this.job;
             if (job)
             {
                 stopTimer(this.timerId);
@@ -321,14 +351,14 @@ art.on =
     Task.prototype.doAfter =
         function (millisecs)
         {
-            let task = this;
-            let job = task.job;
+            const task = this;
+            const job = task.job;
             if (job)
             {
                 stopTimer(task.timerId);
                 task.timerId =
                     startTimer(
-                        function ()
+                        () =>
                         {
                             task.do();
                         },
@@ -339,7 +369,7 @@ art.on =
     
     // Square Wave Beep //
     
-    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
     let stopBeepTask = null;
     
@@ -347,14 +377,14 @@ art.on =
     {
         if (stopBeepTask)
             stopBeepTask.do();
-        let oscillator = audioCtx.createOscillator();
+        const oscillator = audioCtx.createOscillator();
         oscillator.connect(audioCtx.destination);
         oscillator.frequency.value = frequency;
         oscillator.type = 'square';
         oscillator.start();
         stopBeepTask =
             Task.create(
-                function ()
+                () =>
                 {
                     oscillator.disconnect();
                     stopBeepTask = null;
@@ -403,18 +433,18 @@ art.on =
         if (boardReady && !releaseTileTask)
         {
             Task.doAll();
-            let classList = this.classList;
+            const classList = this.classList;
             classList.add('down');
             if (evt.type === 'mousedown') // no transition on touch
                 classList.add('smooth');
-            let expectedTile = sequence[seqIndex++];
+            const expectedTile = sequence[seqIndex++];
             if (this === expectedTile)
             {
-                let frequency = this.dataset.frequency;
-                let oscillator = startBeep(frequency);
+                const frequency = this.dataset.frequency;
+                const oscillator = startBeep(frequency);
                 releaseTileTask =
                     Task.create(
-                        function ()
+                        () =>
                         {
                             classList.remove('down', 'smooth');
                             stopBeep(oscillator, 200);
@@ -425,7 +455,7 @@ art.on =
             else
             {
                 Task.create(
-                    function ()
+                    () =>
                     {
                         classList.remove('down');
                     }
@@ -453,7 +483,7 @@ art.on =
             art.on('touchend', handleOffEvents)
         );
         
-        let header =
+        const header =
             art(
                 'H1',
                 {
@@ -465,7 +495,7 @@ art.on =
             );
         
         tileBoard = art('DIV');
-        let gameBoard =
+        const gameBoard =
             art(
                 'DIV',
                 { style: { position: 'relative',  width: '300px', height: '300px' } },
@@ -486,7 +516,7 @@ art.on =
             { transition: 'background 120ms ease, box-shadow 120ms ease, margin 120ms ease' }
         );
         art.css('.ready *', { cursor: 'pointer' });
-        let tileInfos =
+        const tileInfos =
         [
             {
                 name:       'green',
@@ -517,53 +547,50 @@ art.on =
                 shadow:     '#2E67AB',
             },
         ];
-        let keyframesRuleObj = { };
+        const keyframesRuleObj = { };
         tileInfos.forEach(
-            function (tileInfo, index)
+            (tileInfo, index) =>
             {
-                let name = tileInfo.name;
-                let tile =
+                const { background, frequency, lit, name, shadow } = tileInfo;
+                const tile =
                     art(
                         'DIV',
-                        { className: 'tile ' + name, dataset: { frequency: tileInfo.frequency } },
+                        { className: `tile ${name}`, dataset: { frequency } },
                         art.on('mousedown', handleOnEvents),
                         art.on('touchstart', handleOnEvents),
                         art.on('mouseout', handleOffEvents)
                     );
-                let borderRadii = [0, 0, 0, 0];
-                let circularIndex = index ^ index >> 1;
+                const borderRadii = [0, 0, 0, 0];
+                const circularIndex = index ^ index >> 1;
                 borderRadii[circularIndex] = '145px';
-                let borderRadius = borderRadii.join(' ');
-                let background = tileInfo.background;
-                let lit = tileInfo.lit;
-                let shadow = tileInfo.shadow;
+                const borderRadius = borderRadii.join(' ');
                 art.css(
-                    '.' + name,
+                    `.${name}`,
                     {
-                        background: background,
+                        background,
                         'border-radius': borderRadius,
-                        left: 150 * (index & 1) + 'px',
-                        top: 150 * (index >> 1) + 'px'
+                        'left': `${150 * (index & 1)}px`,
+                        'top': `${150 * (index >> 1)}px`
                     }
                 );
                 art.css(
-                    '.down.' + name,
-                    { background: lit, 'box-shadow': '2px 2px 2.5px ' + shadow }
+                    `.down.${name}`,
+                    { 'background': lit, 'box-shadow': `2px 2px 2.5px ${shadow}` }
                 );
                 art.css(
-                    '.lit.' + name,
-                    { background: lit, 'box-shadow': '5px 5px 2.5px ' + shadow }
+                    `.lit.${name}`,
+                    { 'background': lit, 'box-shadow': `5px 5px 2.5px ${shadow}` }
                 );
                 art(tileBoard, tile);
-                keyframesRuleObj[25 * circularIndex + '%'] = { color: lit };
+                keyframesRuleObj[`${25 * circularIndex}%`] = { color: lit };
             }
         );
         keyframesRuleObj['100%'] = keyframesRuleObj['0%'];
         art.css.keyframes('start', keyframesRuleObj);
         
-        let startButton =
+        const startButton =
             art('DIV', { className: 'start' }, 'Start', art.on('click', handleStartButtonClick));
-        let startLayer =
+        const startLayer =
             art(
                 'DIV',
                 { className: 'startLayer' },
@@ -586,45 +613,36 @@ art.on =
             '.start',
             {
                 'align-items': 'center',
-                background: '#B0C4DE',
+                'background': '#B0C4DE',
                 'border-width': '2px',
-                color: '#434A54',
-                cursor: 'pointer',
-                display: 'flex',
-                font: 'bold 20px Verdana',
+                'color': '#434A54',
+                'cursor': 'pointer',
+                'display': 'flex',
+                'font': 'bold 20px Verdana',
                 'justify-content': 'center',
                 'letter-spacing': '1px',
-                margin: '3px',
-                width: '92px',
-                height: '92px',
+                'margin': '3px',
+                'width': '92px',
+                'height': '92px',
             }
         );
         art.css(
             '.start:active',
-            {
-                'animation': 'start 1.5s infinite',
-                'border-left-color': '#AAA',
-                'border-right-color': '#DDD',
-                'border-top-color': '#AAA',
-                'border-bottom-color': '#DDD',
-            }
+            { 'animation': 'start 1.5s infinite', 'border-color': '#AAA #DDD #DDD #AAA' }
         );
         art.css(
             '.start,.startLayer',
             {
+                'border-color': '#DDD #AAA #AAA #DDD',
                 'border-radius': '100%',
                 'border-style': 'solid',
-                'border-left-color': '#DDD',
-                'border-right-color': '#AAA',
-                'border-top-color': '#DDD',
-                'border-bottom-color': '#AAA',
                 'box-sizing': 'border-box',
             }
         );
         
         roundSpan = art('SPAN', '—');
         statusBlock = art('H2', { style: { textAlign: 'center' } }, 'Hello');
-        let footer =
+        const footer =
             art(
                 'FOOTER',
                 {
@@ -654,7 +672,13 @@ art.on =
                     WebkitUserSelect: 'none',
                 }
             },
-            art('DIV', { style: { margin: '0 auto', width: '300px' } }, header, gameBoard, footer)
+            art(
+                'DIV',
+                { style: { cursor: 'default', margin: '0 auto', width: '300px' } },
+                header,
+                gameBoard,
+                footer
+            )
         );
     }
     
@@ -664,14 +688,14 @@ art.on =
         {
             if (seqIndex < round)
             {
-                let tile = sequence[seqIndex++];
-                let frequency = tile.dataset.frequency;
-                let oscillator = startBeep(frequency);
+                const tile = sequence[seqIndex++];
+                const frequency = tile.dataset.frequency;
+                const oscillator = startBeep(frequency);
                 stopBeep(oscillator, interval - 50);
-                let classList = tile.classList;
+                const classList = tile.classList;
                 classList.add('lit');
                 Task.create(
-                    function ()
+                    () =>
                     {
                         classList.remove('lit');
                     }
@@ -684,13 +708,13 @@ art.on =
         seqIndex = 0;
         setBoardStatus(false, 'Look', '');
         sequence.push(randomTile());
-        let round = sequence.length;
+        const round = sequence.length;
         roundSpan.textContent = round;
-        let interval = round > 13 ? 270 : round > 5 ? 370 : 470;
-        let timer = repeatTimer(callback, 800, interval);
-        let boardReadyTask =
+        const interval = round > 13 ? 270 : round > 5 ? 370 : 470;
+        const timer = repeatTimer(callback, 800, interval);
+        const boardReadyTask =
             Task.create(
-                function ()
+                () =>
                 {
                     stopTimer(timer);
                     seqIndex = 0;
@@ -702,7 +726,7 @@ art.on =
     
     function randomTile()
     {
-        let tile = tileBoard.children[Math.random() * 4 ^ 0];
+        const tile = tileBoard.children[Math.random() * 4 ^ 0];
         return tile;
     }
     
@@ -718,14 +742,14 @@ art.on =
     {
         let timerId =
             startTimer(
-                function ()
+                () =>
                 {
                     timerId = void 0;
-                    let tile = sequence[seqIndex];
-                    let classList = tile.classList;
+                    const tile = sequence[seqIndex];
+                    const classList = tile.classList;
                     classList.add('lit');
                     Task.create(
-                        function ()
+                        () =>
                         {
                             classList.remove('lit');
                         }
@@ -735,7 +759,7 @@ art.on =
                 3000
             );
         Task.create(
-            function ()
+            () =>
             {
                 stopTimer(timerId);
             }
