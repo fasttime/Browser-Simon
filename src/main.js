@@ -68,7 +68,7 @@
                     'let notify=()=>postMessage({id});' +
                     'let startDelay=callback=>' +
                         `idMap.set(id,setTimeout(()=>{callback();notify()},data.${DELAY_KEY}));` +
-                    `let data=event.data,id=data.${ID_KEY};` +
+                    `let{data}=event,id=data.${ID_KEY};` +
                     `switch(data.${ACTION_KEY})` +
                     '{' +
                     `case"${ACTION_VALUE_START}":` +
@@ -92,11 +92,11 @@
     timerWorker.onmessage =
         event =>
         {
-            const id = event.data.id;
+            const { id } = event.data;
             const timerData = timerDataMap.get(id);
             if (timerData)
             {
-                const callback = timerData.callback;
+                const { callback } = timerData;
                 if (timerData.once)
                     timerDataMap.delete(id);
                 callback();
@@ -134,12 +134,12 @@
     Task.prototype.do =
         function ()
         {
-            const job = this.job;
+            const { job } = this;
             if (job)
             {
                 stopTimer(this.timerId);
                 delete this.timerId;
-                this.job = void 0;
+                this.job = undefined;
                 tasks.delete(this);
                 job();
             }
@@ -149,7 +149,7 @@
         function (millisecs)
         {
             const task = this;
-            const job = task.job;
+            const { job } = task;
             if (job)
             {
                 stopTimer(task.timerId);
@@ -230,14 +230,14 @@
         if (boardReady && !releaseTileTask)
         {
             Task.doAll();
-            const classList = this.classList;
+            const { classList } = this;
             classList.add('down');
             if (evt.type === 'mousedown') // no transition on touch
                 classList.add('smooth');
             const expectedTile = sequence[seqIndex++];
             if (this === expectedTile)
             {
-                const frequency = this.dataset.frequency;
+                const { frequency } = this.dataset;
                 const oscillator = startBeep(frequency);
                 releaseTileTask =
                     Task.create(
@@ -486,10 +486,10 @@
             if (seqIndex < round)
             {
                 const tile = sequence[seqIndex++];
-                const frequency = tile.dataset.frequency;
+                const { frequency } = tile.dataset;
                 const oscillator = startBeep(frequency);
                 stopBeep(oscillator, interval - 50);
-                const classList = tile.classList;
+                const { classList } = tile;
                 classList.add('lit');
                 Task.create(
                     () =>
@@ -541,9 +541,9 @@
             startTimer(
                 () =>
                 {
-                    timerId = void 0;
+                    timerId = undefined;
                     const tile = sequence[seqIndex];
-                    const classList = tile.classList;
+                    const { classList } = tile;
                     classList.add('lit');
                     Task.create(
                         () =>
