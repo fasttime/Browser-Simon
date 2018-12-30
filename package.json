@@ -15,7 +15,7 @@
   "author": "Francesco Trotta <ft@fasttime.org> (https://github.com/fasttime)",
   "files": [
     "Play now!.svg",
-    "dist",
+    "dist/*.js",
     "index.html"
   ],
   "repository": {
@@ -26,13 +26,12 @@
     "build": "npm install && gulp"
   },
   "devDependencies": {
-    "art-js": "~0.6.1",
-    "google-closure-compiler-js": "~20161201.0.1",
-    "gulp": "~3.9.1",
+    "art-js": "~0.7.2",
+    "del": "~3.0.0",
+    "google-closure-compiler": "~20181210.0.0",
+    "gulp": "~4.0.0",
     "gulp-concat": "~2.6.1",
-    "gulp-fasttime-lint": "~0.2.4",
-    "gulp-replace": "~0.5.4",
-    "jscrewit": "~2.5.1",
-    "run-sequence": "~1.2.2"
+    "gulp-fasttime-lint": "~0.6.0",
+    "jscrewit": "~2.9.1"
   }
 }

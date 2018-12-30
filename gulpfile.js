@@ -1,40 +1,55 @@
-/* eslint-env node */
-
 'use strict';
 
-const gulp = require('gulp');
+const { dest, parallel, series, src, task } = require('gulp');
 
-gulp.task(
+task
+(
     'clean',
     () =>
     {
         const del = require('del');
-        
+
         const stream = del(['dist', 'tmp-src']);
         return stream;
     }
 );
 
-gulp.task(
+task
+(
     'lint',
     () =>
     {
         const lint = require('gulp-fasttime-lint');
-        
-        const options = { envs: ['browser'], parserOptions: { ecmaVersion: 6 } };
-        const stream = gulp.src(['*.js', 'src/*.js']).pipe(lint(options));
+
+        const stream =
+        lint
+        (
+            {
+                src: '*.js',
+                envs: ['node'],
+                parserOptions: { ecmaVersion: 6 },
+            },
+            {
+                src: 'src/*.js',
+                envs: ['browser'],
+                parserOptions: { ecmaVersion: 6 },
+                rules: { strict: ['error', 'function'] },
+            }
+        );
         return stream;
     }
 );
 
-gulp.task(
+task
+(
     'make-art',
     callback =>
     {
         const fs = require('fs');
         const makeArt = require('art-js');
-        
-        fs.mkdir(
+
+        fs.mkdir
+        (
             'tmp-src',
             error =>
             {
@@ -42,78 +57,80 @@ gulp.task(
                     callback(error);
                 else
                 {
-                    makeArt.async(
-                        'tmp-src/art.js',
-                        { css: { keyframes: true }, on: true },
-                        callback
-                    );
+                    makeArt.async
+                    ('tmp-src/art.js', { css: { keyframes: true }, on: true }, callback);
                 }
             }
         );
     }
 );
 
-gulp.task(
+task
+(
     'concat',
     () =>
     {
         const concat = require('gulp-concat');
-        const replace = require('gulp-replace');
-        
+
         const stream =
-            gulp
-            .src(['tmp-src/art.js', 'src/main.js'])
-            .pipe(replace(/^\/\*[^]*?\*\/\s*\n/, ''))
-            .pipe(concat('simon.js'))
-            .pipe(gulp.dest('dist'));
+        src(['tmp-src/art.js', 'src/main.js']).pipe(concat('simon.js')).pipe(dest('dist'));
         return stream;
     }
 );
 
-gulp.task(
+task
+(
     'closure-compiler',
     () =>
     {
-        const compiler = require('google-closure-compiler-js').gulp();
-        
-        const options =
-        {
-            compilationLevel: 'ADVANCED',
-            jsOutputFile: 'simon.min.js',
-            rewritePolyfills: false,
-            warningLevel: 'QUIET'
-        };
-        const stream = gulp.src('dist/simon.js').pipe(compiler(options)).pipe(gulp.dest('dist'));
+        const compiler = require('google-closure-compiler').gulp();
+
+        const stream =
+        src('dist/simon.js')
+        .pipe
+        (
+            compiler
+            (
+                {
+                    compilationLevel: 'ADVANCED',
+                    jsOutputFile: 'simon.min.js',
+                    rewritePolyfills: false,
+                    warningLevel: 'QUIET',
+                }
+            )
+        )
+        .pipe(dest('dist'));
         return stream;
     }
 );
 
-gulp.task(
+task
+(
     'jscrewit',
-    () =>
+    callback =>
     {
         const JScrewIt = require('jscrewit');
         const fs = require('fs');
-        
-        const input = fs.readFileSync('dist/simon.min.js');
-        const output = JScrewIt.encode(input, { features: 'COMPACT' });
-        fs.writeFileSync('dist/simon.screwed.js', output);
+
+        fs.readFile
+        (
+            'dist/simon.min.js',
+            (error, data) =>
+            {
+                if (error)
+                    callback(error);
+                else
+                {
+                    const output = JScrewIt.encode(data, { features: 'COMPACT' });
+                    fs.writeFile('dist/simon.screwed.js', output, callback);
+                }
+            }
+        );
     }
 );
 
-gulp.task(
+task
+(
     'default',
-    callback =>
-    {
-        const runSequence = require('run-sequence');
-        
-        runSequence(
-            ['lint', 'clean'],
-            'make-art',
-            'concat',
-            'closure-compiler',
-            'jscrewit',
-            callback
-        );
-    }
+    series(parallel('lint', 'clean'), 'make-art', 'concat', 'closure-compiler', 'jscrewit')
 );

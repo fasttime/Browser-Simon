@@ -1,3 +1,6 @@
-node_modules/
-npm-debug.log
-tmp-src/
+.*
+!.git*
+!/.npmrc
+/node_modules
+/npm-debug.log
+/tmp-src

@@ -1,25 +1,23 @@
-/* global art */
-
 (() =>
 {
     'use strict';
-    
+
     // Timer //
-    
+
     const ACTION_KEY    = 'action';
     const DELAY_KEY     = 'delay';
     const ID_KEY        = 'id';
     const INTERVAL_KEY  = 'interval';
-    
+
     const ACTION_VALUE_REPEAT   = 'REPAEAT';
     const ACTION_VALUE_START    = 'START';
     const ACTION_VALUE_STOP     = 'STOP';
-    
+
     const timerDataMap = new Map();
     let timerWorker;
-    
+
     let lastTimerId;
-    
+
     function newTimerId()
     {
         do
@@ -27,149 +25,151 @@
         while (timerDataMap.has(lastTimerId));
         return lastTimerId;
     }
-    
+
     function repeatTimer(callback, delay, interval)
     {
         const id = newTimerId();
         timerDataMap.set(id, { callback, once: false });
-        timerWorker.postMessage(
+        timerWorker.postMessage
+        (
             {
                 [ACTION_KEY]: ACTION_VALUE_REPEAT,
                 [ID_KEY]: id,
                 [DELAY_KEY]: delay,
-                [INTERVAL_KEY]: interval
+                [INTERVAL_KEY]: interval,
             }
         );
         return id;
     }
-    
+
     function startTimer(callback, delay)
     {
         const id = newTimerId();
         timerDataMap.set(id, { callback, once: true });
-        timerWorker.postMessage(
-            { [ACTION_KEY]: ACTION_VALUE_START, [ID_KEY]: id, [DELAY_KEY]: delay }
-        );
+        timerWorker.postMessage
+        ({ [ACTION_KEY]: ACTION_VALUE_START, [ID_KEY]: id, [DELAY_KEY]: delay });
         return id;
     }
-    
+
     function stopTimer(id)
     {
         if (timerDataMap.delete(id))
             timerWorker.postMessage({ [ACTION_KEY]: ACTION_VALUE_STOP, [ID_KEY]: id });
     }
-    
+
     {
         const script =
-            'let idMap=new Map;' +
-            'onmessage=' +
-                'event=>' +
-                '{' +
-                    'let notify=()=>postMessage({id});' +
-                    'let startDelay=callback=>' +
-                        `idMap.set(id,setTimeout(()=>{callback();notify()},data.${DELAY_KEY}));` +
-                    `let{data}=event,id=data.${ID_KEY};` +
-                    `switch(data.${ACTION_KEY})` +
-                    '{' +
-                    `case"${ACTION_VALUE_START}":` +
-                        'startDelay(()=>idMap.delete(id));' +
-                        'break;' +
-                    `case"${ACTION_VALUE_REPEAT}":` +
-                        `startDelay(()=>idMap.set(id,setInterval(notify,data.${INTERVAL_KEY})));` +
-                        'break;' +
-                    `case"${ACTION_VALUE_STOP}":` +
-                        'let nativeId=idMap.get(id);' +
-                        'idMap.delete(id);' +
-                        'clearTimeout(nativeId);' +
-                        'break;' +
-                    '}' +
-                '}';
+        'let idMap=new Map;' +
+        'onmessage=' +
+        'event=>' +
+        '{' +
+            'let notify=()=>postMessage({id});' +
+            'let startDelay=' +
+            `callback=>idMap.set(id,setTimeout(()=>{callback();notify()},data.${DELAY_KEY}));` +
+            `let{data}=event,id=data.${ID_KEY};` +
+            `switch(data.${ACTION_KEY})` +
+            '{' +
+            `case"${ACTION_VALUE_START}":` +
+                'startDelay(()=>idMap.delete(id));' +
+                'break;' +
+            `case"${ACTION_VALUE_REPEAT}":` +
+                `startDelay(()=>idMap.set(id,setInterval(notify,data.${INTERVAL_KEY})));` +
+                'break;' +
+            `case"${ACTION_VALUE_STOP}":` +
+                'let nativeId=idMap.get(id);' +
+                'idMap.delete(id);' +
+                'clearTimeout(nativeId);' +
+                'break;' +
+            '}' +
+        '}';
         const blob = new Blob([script]);
         const strUrl = URL.createObjectURL(blob);
         timerWorker = new Worker(strUrl);
     }
-    
+
     timerWorker.onmessage =
-        event =>
+    event =>
+    {
+        const { id } = event.data;
+        const timerData = timerDataMap.get(id);
+        if (timerData)
         {
-            const { id } = event.data;
-            const timerData = timerDataMap.get(id);
-            if (timerData)
-            {
-                const { callback } = timerData;
-                if (timerData.once)
-                    timerDataMap.delete(id);
-                callback();
-            }
-        };
-    
+            const { callback } = timerData;
+            if (timerData.once)
+                timerDataMap.delete(id);
+            callback();
+        }
+    };
+
     // Task //
-    
+
     const tasks = new Set();
-    
+
     function Task(job)
     {
         this.job = job;
         tasks.add(this);
     }
-    
+
     Task.create =
-        job =>
-        {
-            const task = new Task(job);
-            return task;
-        };
-    
+    job =>
+    {
+        const task = new Task(job);
+        return task;
+    };
+
     Task.doAll =
-        () =>
+    () =>
+    {
+        tasks.forEach
+        (
+            task =>
+            {
+                task.do();
+            }
+        );
+    };
+
+    Task.prototype.do =
+    function ()
+    {
+        const { job } = this;
+        if (job)
         {
-            tasks.forEach(
-                task =>
+            stopTimer(this.timerId);
+            delete this.timerId;
+            this.job = undefined;
+            tasks.delete(this);
+            job();
+        }
+    };
+
+    Task.prototype.doAfter =
+    function (millisecs)
+    {
+        const task = this;
+        const { job } = task;
+        if (job)
+        {
+            stopTimer(task.timerId);
+            task.timerId =
+            startTimer
+            (
+                () =>
                 {
                     task.do();
-                }
+                },
+                millisecs
             );
-        };
-    
-    Task.prototype.do =
-        function ()
-        {
-            const { job } = this;
-            if (job)
-            {
-                stopTimer(this.timerId);
-                delete this.timerId;
-                this.job = undefined;
-                tasks.delete(this);
-                job();
-            }
-        };
-    
-    Task.prototype.doAfter =
-        function (millisecs)
-        {
-            const task = this;
-            const { job } = task;
-            if (job)
-            {
-                stopTimer(task.timerId);
-                task.timerId =
-                    startTimer(
-                        () =>
-                        {
-                            task.do();
-                        },
-                        millisecs
-                    );
-            }
-        };
-    
+        }
+    };
+
     // Square Wave Beep //
-    
+
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    
+
     let stopBeepTask = null;
-    
+
     function startBeep(frequency)
     {
         if (stopBeepTask)
@@ -180,39 +180,42 @@
         oscillator.type = 'square';
         oscillator.start();
         stopBeepTask =
-            Task.create(
-                () =>
-                {
-                    oscillator.disconnect();
-                    stopBeepTask = null;
-                }
-            );
+        Task.create
+        (
+            () =>
+            {
+                oscillator.disconnect();
+                stopBeepTask = null;
+            }
+        );
         return oscillator;
     }
-    
+
     function stopBeep(oscillator, millisecs)
     {
         oscillator.stop(audioCtx.currentTime + millisecs / 1000);
     }
-    
+
     // Simon //
-    
+
+    const { art } = window;
+
     let roundSpan;
     let statusBlock;
     let tileBoard;
-    
+
     let boardReady = false;
     let releaseTileTask = null;
     let seqIndex;
     let sequence;
-    
+
     function gameOver()
     {
         startBeep(42);
         setBoardStatus(false, 'Game over', '#A33');
         Task.create(Task.doAll).doAfter(1500);
     }
-    
+
     function handleOffEvents()
     {
         if (releaseTileTask)
@@ -224,7 +227,7 @@
                 nextRound();
         }
     }
-    
+
     function handleOnEvents(evt)
     {
         if (boardReady && !releaseTileTask)
@@ -240,18 +243,20 @@
                 const { frequency } = this.dataset;
                 const oscillator = startBeep(frequency);
                 releaseTileTask =
-                    Task.create(
-                        () =>
-                        {
-                            classList.remove('down', 'smooth');
-                            stopBeep(oscillator, 200);
-                            releaseTileTask = null;
-                        }
-                    );
+                Task.create
+                (
+                    () =>
+                    {
+                        classList.remove('down', 'smooth');
+                        stopBeep(oscillator, 200);
+                        releaseTileTask = null;
+                    }
+                );
             }
             else
             {
-                Task.create(
+                Task.create
+                (
                     () =>
                     {
                         classList.remove('down');
@@ -274,31 +279,29 @@
     {
         document.title = 'Browser Simon';
         art(document.head, art('META', { content: 'initial-scale=1', name: 'viewport' }));
-        art(
+        art
+        (
             document.documentElement,
             art.on('mouseup', handleOffEvents),
             art.on('touchend', handleOffEvents)
         );
-        
+
         const header =
-            art(
-                'H1',
-                {
-                    style: { font: 'bold 28px/100% Georgia', margin: '28px 0', textAlign: 'center' }
-                },
-                art('SPAN', { style: { color: '#49F', letterSpacing: '1px' } }, 'BROWSER'),
-                art('BR'),
-                art('SPAN', { style: { fontSize: '150%' } }, 'sımon')
-            );
-        
+        art
+        (
+            'H1',
+            { style: { font: 'bold 28px/100% Georgia', margin: '28px 0', textAlign: 'center' } },
+            art('SPAN', { style: { color: '#49F', letterSpacing: '1px' } }, 'BROWSER'),
+            art('BR'),
+            art('SPAN', { style: { fontSize: '150%' } }, 'sımon')
+        );
+
         tileBoard = art('DIV');
         const gameBoard =
-            art(
-                'DIV',
-                { style: { position: 'relative',  width: '300px', height: '300px' } },
-                tileBoard
-            );
-        art.css(
+        art
+        ('DIV', { style: { position: 'relative',  width: '300px', height: '300px' } }, tileBoard);
+        art.css
+        (
             '.tile',
             {
                 'box-shadow': '5px 5px 2.5px #ABABAB',
@@ -308,7 +311,8 @@
             }
         );
         art.css('.down', { margin: '3px 0 0 3px' });
-        art.css(
+        art.css
+        (
             '.lit,.smooth',
             { transition: 'background 120ms ease, box-shadow 120ms ease, margin 120ms ease' }
         );
@@ -345,68 +349,69 @@
             },
         ];
         const keyframesRuleObj = { };
-        tileInfos.forEach(
+        tileInfos.forEach
+        (
             (tileInfo, index) =>
             {
                 const { background, frequency, lit, name, shadow } = tileInfo;
                 const tile =
-                    art(
-                        'DIV',
-                        { className: `tile ${name}`, dataset: { frequency } },
-                        art.on('mousedown', handleOnEvents),
-                        art.on('touchstart', handleOnEvents),
-                        art.on('mouseout', handleOffEvents)
-                    );
+                art
+                (
+                    'DIV',
+                    { className: `tile ${name}`, dataset: { frequency } },
+                    art.on('mousedown', handleOnEvents),
+                    art.on('touchstart', handleOnEvents),
+                    art.on('mouseout', handleOffEvents)
+                );
                 const borderRadii = [0, 0, 0, 0];
                 const circularIndex = index ^ index >> 1;
                 borderRadii[circularIndex] = '145px';
                 const borderRadius = borderRadii.join(' ');
-                art.css(
+                art.css
+                (
                     `.${name}`,
                     {
                         background,
                         'border-radius': borderRadius,
                         'left': `${150 * (index & 1)}px`,
-                        'top': `${150 * (index >> 1)}px`
+                        'top': `${150 * (index >> 1)}px`,
                     }
                 );
-                art.css(
-                    `.down.${name}`,
-                    { 'background': lit, 'box-shadow': `2px 2px 2.5px ${shadow}` }
-                );
-                art.css(
-                    `.lit.${name}`,
-                    { 'background': lit, 'box-shadow': `5px 5px 2.5px ${shadow}` }
-                );
+                art.css
+                (`.down.${name}`, { 'background': lit, 'box-shadow': `2px 2px 2.5px ${shadow}` });
+                art.css
+                (`.lit.${name}`, { 'background': lit, 'box-shadow': `5px 5px 2.5px ${shadow}` });
                 art(tileBoard, tile);
                 keyframesRuleObj[`${25 * circularIndex}%`] = { color: lit };
             }
         );
         keyframesRuleObj['100%'] = keyframesRuleObj['0%'];
         art.css.keyframes('start', keyframesRuleObj);
-        
+
         const startButton =
-            art('DIV', { className: 'start' }, 'Start', art.on('click', handleStartButtonClick));
+        art('DIV', { className: 'start' }, 'Start', art.on('click', handleStartButtonClick));
         const startLayer =
-            art(
-                'DIV',
-                { className: 'startLayer' },
+        art
+        (
+            'DIV',
+            { className: 'startLayer' },
+            {
+                style:
                 {
-                    style:
-                    {
-                        background: '#888',
-                        borderWidth: '1px',
-                        position: 'absolute',
-                        left: '100px',
-                        top: '100px',
-                        width: '100px',
-                        height: '100px',
-                    }
+                    background: '#888',
+                    borderWidth: '1px',
+                    position: 'absolute',
+                    left: '100px',
+                    top: '100px',
+                    width: '100px',
+                    height: '100px',
                 },
-                startButton
-            );
+            },
+            startButton
+        );
         art(gameBoard, startLayer);
-        art.css(
+        art.css
+        (
             '.start',
             {
                 'align-items': 'center',
@@ -423,11 +428,13 @@
                 'height': '92px',
             }
         );
-        art.css(
+        art.css
+        (
             '.start:active',
             { 'animation': 'start 1.5s infinite', 'border-color': '#AAA #DDD #DDD #AAA' }
         );
-        art.css(
+        art.css
+        (
             '.start,.startLayer',
             {
                 'border-color': '#DDD #AAA #AAA #DDD',
@@ -436,28 +443,30 @@
                 'box-sizing': 'border-box',
             }
         );
-        
+
         roundSpan = art('SPAN', '—');
         statusBlock = art('H2', { style: { textAlign: 'center' } }, 'Hello');
         const footer =
-            art(
-                'FOOTER',
+        art
+        (
+            'FOOTER',
+            {
+                style:
                 {
-                    style:
-                    {
-                        display: 'table',
-                        margin: '18px 0',
-                        tableLayout: 'fixed',
-                        whiteSpace: 'nowrap',
-                        width: '100%',
-                    }
+                    display: 'table',
+                    margin: '18px 0',
+                    tableLayout: 'fixed',
+                    whiteSpace: 'nowrap',
+                    width: '100%',
                 },
-                art('H2', { style: { overflowX: 'auto' } }, 'Round: ', roundSpan),
-                statusBlock
-            );
+            },
+            art('H2', { style: { overflowX: 'auto' } }, 'Round: ', roundSpan),
+            statusBlock
+        );
         art.css('h2', { display: 'table-cell', font: '24px Verdana' });
-        
-        art(
+
+        art
+        (
             document.body,
             {
                 style:
@@ -467,9 +476,10 @@
                     userSelect: 'none',
                     MozUserSelect: 'none',
                     WebkitUserSelect: 'none',
-                }
+                },
             },
-            art(
+            art
+            (
                 'DIV',
                 { style: { cursor: 'default', margin: '0 auto', width: '300px' } },
                 header,
@@ -478,7 +488,7 @@
             )
         );
     }
-    
+
     function nextRound()
     {
         function callback()
@@ -491,17 +501,19 @@
                 stopBeep(oscillator, interval - 50);
                 const { classList } = tile;
                 classList.add('lit');
-                Task.create(
+                Task.create
+                (
                     () =>
                     {
                         classList.remove('lit');
                     }
-                ).doAfter(interval - 100);
+                )
+                .doAfter(interval - 100);
             }
             else
                 boardReadyTask.do();
         }
-        
+
         seqIndex = 0;
         setBoardStatus(false, 'Look', '');
         sequence.push(randomTile());
@@ -510,23 +522,24 @@
         const interval = round > 13 ? 270 : round > 5 ? 370 : 470;
         const timer = repeatTimer(callback, 800, interval);
         const boardReadyTask =
-            Task.create(
-                () =>
-                {
-                    stopTimer(timer);
-                    seqIndex = 0;
-                    startWasteOfTime();
-                    setBoardStatus(true, 'Play', '');
-                }
-            );
+        Task.create
+        (
+            () =>
+            {
+                stopTimer(timer);
+                seqIndex = 0;
+                startWasteOfTime();
+                setBoardStatus(true, 'Play', '');
+            }
+        );
     }
-    
+
     function randomTile()
     {
         const tile = tileBoard.children[Math.random() * 4 ^ 0];
         return tile;
     }
-    
+
     function setBoardStatus(ready, text, color)
     {
         boardReady = ready;
@@ -534,35 +547,38 @@
         statusBlock.textContent = text;
         statusBlock.style.color = color;
     }
-    
+
     function startWasteOfTime()
     {
         let timerId =
-            startTimer(
-                () =>
-                {
-                    timerId = undefined;
-                    const tile = sequence[seqIndex];
-                    const { classList } = tile;
-                    classList.add('lit');
-                    Task.create(
-                        () =>
-                        {
-                            classList.remove('lit');
-                        }
-                    );
-                    gameOver();
-                },
-                3000
-            );
-        Task.create(
+        startTimer
+        (
+            () =>
+            {
+                timerId = undefined;
+                const tile = sequence[seqIndex];
+                const { classList } = tile;
+                classList.add('lit');
+                Task.create
+                (
+                    () =>
+                    {
+                        classList.remove('lit');
+                    }
+                );
+                gameOver();
+            },
+            3000
+        );
+        Task.create
+        (
             () =>
             {
                 stopTimer(timerId);
             }
         );
     }
-    
+
     art(document, art.on('DOMContentLoaded', init));
 }
 )();
