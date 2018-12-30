@@ -11,7 +11,7 @@ task
 
         const stream = del(['dist', 'tmp-src']);
         return stream;
-    }
+    },
 );
 
 task
@@ -26,18 +26,18 @@ task
         (
             {
                 src: '*.js',
-                envs: ['node'],
-                parserOptions: { ecmaVersion: 6 },
+                envs: 'node',
+                parserOptions: { ecmaVersion: 8 },
             },
             {
                 src: 'src/*.js',
-                envs: ['browser'],
-                parserOptions: { ecmaVersion: 6 },
+                envs: 'browser',
+                parserOptions: { ecmaVersion: 8 },
                 rules: { strict: ['error', 'function'] },
-            }
+            },
         );
         return stream;
-    }
+    },
 );
 
 task
@@ -60,9 +60,9 @@ task
                     makeArt.async
                     ('tmp-src/art.js', { css: { keyframes: true }, on: true }, callback);
                 }
-            }
+            },
         );
-    }
+    },
 );
 
 task
@@ -75,7 +75,7 @@ task
         const stream =
         src(['tmp-src/art.js', 'src/main.js']).pipe(concat('simon.js')).pipe(dest('dist'));
         return stream;
-    }
+    },
 );
 
 task
@@ -96,12 +96,12 @@ task
                     jsOutputFile: 'simon.min.js',
                     rewritePolyfills: false,
                     warningLevel: 'QUIET',
-                }
-            )
+                },
+            ),
         )
         .pipe(dest('dist'));
         return stream;
-    }
+    },
 );
 
 task
@@ -124,13 +124,13 @@ task
                     const output = JScrewIt.encode(data, { features: 'COMPACT' });
                     fs.writeFile('dist/simon.screwed.js', output, callback);
                 }
-            }
+            },
         );
-    }
+    },
 );
 
 task
 (
     'default',
-    series(parallel('lint', 'clean'), 'make-art', 'concat', 'closure-compiler', 'jscrewit')
+    series(parallel('lint', 'clean'), 'make-art', 'concat', 'closure-compiler', 'jscrewit'),
 );

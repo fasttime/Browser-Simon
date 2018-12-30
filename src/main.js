@@ -37,7 +37,7 @@
                 [ID_KEY]: id,
                 [DELAY_KEY]: delay,
                 [INTERVAL_KEY]: interval,
-            }
+            },
         );
         return id;
     }
@@ -126,7 +126,7 @@
             task =>
             {
                 task.do();
-            }
+            },
         );
     };
 
@@ -159,7 +159,7 @@
                 {
                     task.do();
                 },
-                millisecs
+                millisecs,
             );
         }
     };
@@ -186,7 +186,7 @@
             {
                 oscillator.disconnect();
                 stopBeepTask = null;
-            }
+            },
         );
         return oscillator;
     }
@@ -250,7 +250,7 @@
                         classList.remove('down', 'smooth');
                         stopBeep(oscillator, 200);
                         releaseTileTask = null;
-                    }
+                    },
                 );
             }
             else
@@ -260,7 +260,7 @@
                     () =>
                     {
                         classList.remove('down');
-                    }
+                    },
                 );
                 gameOver();
             }
@@ -281,13 +281,13 @@
         art
         (
             document.head,
-            art('META', { content: 'user-scalable=no, width=device-width', name: 'viewport' })
+            art('META', { content: 'user-scalable=no, width=device-width', name: 'viewport' }),
         );
         art
         (
             document.documentElement,
             art.on('mouseup', handleOffEvents),
-            art.on('touchend', handleOffEvents)
+            art.on('touchend', handleOffEvents),
         );
 
         const header =
@@ -297,7 +297,7 @@
             { style: { font: 'bold 28px/100% Georgia', margin: '28px 0', textAlign: 'center' } },
             art('SPAN', { style: { color: '#49F', letterSpacing: '1px' } }, 'BROWSER'),
             art('BR'),
-            art('SPAN', { style: { fontSize: '150%' } }, 'sımon')
+            art('SPAN', { style: { fontSize: '150%' } }, 'sımon'),
         );
 
         tileBoard = art('DIV');
@@ -312,13 +312,13 @@
                 position: 'absolute',
                 width: '145px',
                 height: '145px',
-            }
+            },
         );
         art.css('.down', { margin: '3px 0 0 3px' });
         art.css
         (
             '.lit,.smooth',
-            { transition: 'background 120ms ease, box-shadow 120ms ease, margin 120ms ease' }
+            { transition: 'background 120ms ease, box-shadow 120ms ease, margin 120ms ease' },
         );
         art.css('.ready *', { cursor: 'pointer' });
         const tileInfos =
@@ -365,7 +365,7 @@
                     { className: `tile ${name}`, dataset: { frequency } },
                     art.on('mousedown', handleOnEvents),
                     art.on('touchstart', handleOnEvents),
-                    art.on('mouseout', handleOffEvents)
+                    art.on('mouseout', handleOffEvents),
                 );
                 const borderRadii = [0, 0, 0, 0];
                 const circularIndex = index ^ index >> 1;
@@ -379,7 +379,7 @@
                         'border-radius': borderRadius,
                         'left': `${150 * (index & 1)}px`,
                         'top': `${150 * (index >> 1)}px`,
-                    }
+                    },
                 );
                 art.css
                 (`.down.${name}`, { 'background': lit, 'box-shadow': `2px 2px 2.5px ${shadow}` });
@@ -387,7 +387,7 @@
                 (`.lit.${name}`, { 'background': lit, 'box-shadow': `5px 5px 2.5px ${shadow}` });
                 art(tileBoard, tile);
                 keyframesRuleObj[`${25 * circularIndex}%`] = { color: lit };
-            }
+            },
         );
         keyframesRuleObj['100%'] = keyframesRuleObj['0%'];
         art.css.keyframes('start', keyframesRuleObj);
@@ -411,7 +411,7 @@
                     height: '100px',
                 },
             },
-            startButton
+            startButton,
         );
         art(gameBoard, startLayer);
         art.css
@@ -430,12 +430,12 @@
                 'margin': '3px',
                 'width': '92px',
                 'height': '92px',
-            }
+            },
         );
         art.css
         (
             '.start:active',
-            { 'animation': 'start 1.5s infinite', 'border-color': '#AAA #DDD #DDD #AAA' }
+            { 'animation': 'start 1.5s infinite', 'border-color': '#AAA #DDD #DDD #AAA' },
         );
         art.css
         (
@@ -445,7 +445,7 @@
                 'border-radius': '100%',
                 'border-style': 'solid',
                 'box-sizing': 'border-box',
-            }
+            },
         );
 
         roundSpan = art('SPAN', '—');
@@ -465,7 +465,7 @@
                 },
             },
             art('H2', { style: { overflowX: 'auto' } }, 'Round: ', roundSpan),
-            statusBlock
+            statusBlock,
         );
         art.css('h2', { display: 'table-cell', font: '24px Verdana' });
 
@@ -488,8 +488,8 @@
                 { style: { cursor: 'default', margin: '0 auto', width: '300px' } },
                 header,
                 gameBoard,
-                footer
-            )
+                footer,
+            ),
         );
     }
 
@@ -510,7 +510,7 @@
                     () =>
                     {
                         classList.remove('lit');
-                    }
+                    },
                 )
                 .doAfter(interval - 100);
             }
@@ -534,7 +534,7 @@
                 seqIndex = 0;
                 startWasteOfTime();
                 setBoardStatus(true, 'Play', '');
-            }
+            },
         );
     }
 
@@ -568,18 +568,18 @@
                     () =>
                     {
                         classList.remove('lit');
-                    }
+                    },
                 );
                 gameOver();
             },
-            3000
+            3000,
         );
         Task.create
         (
             () =>
             {
                 stopTimer(timerId);
-            }
+            },
         );
     }
 
