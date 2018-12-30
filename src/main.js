@@ -278,7 +278,11 @@
     function init()
     {
         document.title = 'Browser Simon';
-        art(document.head, art('META', { content: 'initial-scale=1', name: 'viewport' }));
+        art
+        (
+            document.head,
+            art('META', { content: 'user-scalable=no, width=device-width', name: 'viewport' })
+        );
         art
         (
             document.documentElement,
