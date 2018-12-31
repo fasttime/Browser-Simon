@@ -428,6 +428,7 @@
                 'justify-content': 'center',
                 'letter-spacing': '1px',
                 'margin': '3px',
+                'position': 'fixed', // Workaround for a rendering bug in Safari.
                 'width': '92px',
                 'height': '92px',
             },
@@ -478,7 +479,6 @@
                     color: '#33A',
                     WebkitTapHighlightColor: 'transparent',
                     userSelect: 'none',
-                    MozUserSelect: 'none',
                     WebkitUserSelect: 'none',
                 },
             },
@@ -524,13 +524,13 @@
         const round = sequence.length;
         roundSpan.textContent = round;
         const interval = round > 13 ? 270 : round > 5 ? 370 : 470;
-        const timer = repeatTimer(callback, 800, interval);
+        const timerId = repeatTimer(callback, 800, interval);
         const boardReadyTask =
         Task.create
         (
             () =>
             {
-                stopTimer(timer);
+                stopTimer(timerId);
                 seqIndex = 0;
                 startWasteOfTime();
                 setBoardStatus(true, 'Play', '');
