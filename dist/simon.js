@@ -17,7 +17,8 @@
      * assigned to the taget node, or a string of text to be appended to the target node.
      * Note that `null` and `undefined` arguments are simply ignored.
      *
-     * @returns {Node} The node specified by the target.
+     * @returns {Node}
+     * The node specified by the target.
      */
 
     var art =
@@ -150,7 +151,8 @@
      * An object mapping selectors to rule definition objects.
      * Rule definition objects map style names to their respective values.
      *
-     * @returns {boolean} `true` on success; otherwise, `false`.
+     * @returns {boolean}
+     * `true` on success; otherwise, `false`.
      */
 
     art.css.keyframes =

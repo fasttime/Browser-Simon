@@ -5,12 +5,11 @@ const { dest, parallel, series, src, task } = require('gulp');
 task
 (
     'clean',
-    () =>
+    async () =>
     {
         const del = require('del');
 
-        const stream = del(['dist', 'tmp-src']);
-        return stream;
+        await del(['dist', 'tmp-src']);
     },
 );
 

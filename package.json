@@ -8,9 +8,7 @@
     "simon"
   ],
   "homepage": "https://github.com/fasttime/Browser-Simon",
-  "bugs": {
-    "url": "https://github.com/fasttime/Browser-Simon/issues"
-  },
+  "bugs": "https://github.com/fasttime/Browser-Simon/issues",
   "license": "ISC",
   "author": "Francesco Trotta <ft@fasttime.org> (https://github.com/fasttime)",
   "files": [
@@ -26,12 +24,12 @@
     "build": "npm install && gulp"
   },
   "devDependencies": {
-    "art-js": "~0.7.2",
-    "del": "~3.0.0",
-    "google-closure-compiler": "~20181210.0.0",
-    "gulp": "~4.0.0",
+    "art-js": "~0.7.3",
+    "del": "~4.1.0",
+    "google-closure-compiler": "~20190415.0.0",
+    "gulp": "~4.0.1",
     "gulp-concat": "~2.6.1",
-    "gulp-fasttime-lint": "~0.7.0",
-    "jscrewit": "~2.9.1"
+    "gulp-fasttime-lint": "~0.9.2",
+    "jscrewit": "~2.9.5"
   }
 }
