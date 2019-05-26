@@ -2,24 +2,7 @@
 {
     'use strict';
 
-    /**
-     * Creates or modifies a node.
-     *
-     * @function art
-     *
-     * @param target
-     * A node, a function returning a node, or a string specifying the type of element to be created
-     * using `document.createElement()`.
-     *
-     * @param {...*} [arguments]
-     * Each additional argument may be a node to be appended to the taget node, a function to be
-     * called with the target node as its only argument, an object whose properties shall be
-     * assigned to the taget node, or a string of text to be appended to the target node.
-     * Note that `null` and `undefined` arguments are simply ignored.
-     *
-     * @returns {Node}
-     * The node specified by the target.
-     */
+    var _Object = Object;
 
     var art =
     window.art =
@@ -54,11 +37,11 @@
 
     function deepAssign(target, source)
     {
-        Object.keys(source).forEach
+        _Object.keys(source).forEach
         (
             function (name)
             {
-                var descriptor = Object.getOwnPropertyDescriptor(source, name);
+                var descriptor = _Object.getOwnPropertyDescriptor(source, name);
                 if ('value' in descriptor)
                 {
                     var value = descriptor.value;
@@ -68,31 +51,10 @@
                         target[name] = value;
                 }
                 else
-                    Object.defineProperty(target, name, descriptor);
+                    _Object.defineProperty(target, name, descriptor);
             }
         );
     }
-
-    /**
-     * Returns a callback that can be used to attach a listener to the target node in a call to
-     * {@link art `art()`}.
-     * The arguments are the same as in `EventTarget.addEventListener()`, except that the argument
-     * `type` may be an array specifying multiple event types.
-     *
-     * @function art.on
-     *
-     * @param {string|Array<string>} type
-     * A string or array of strings specifing the event types to listen for.
-     *
-     * @param {Function|EventListener} listener
-     * The event handler to associate with the events.
-     *
-     * @param {boolean=} useCapture
-     * `true` to register the events for the capturing phase, or `false` to register the events for
-     * the bubbling phase.
-     *
-     * @returns {Function}
-     */
 
     art.on =
     function (type, listener, useCapture)
@@ -120,40 +82,12 @@
         return processEventListener;
     }
 
-    /**
-     * Creates a new CSS rule and adds it to the document.
-     *
-     * @function art.css
-     *
-     * @param {string} selector
-     * The selector of the new rule.
-     *
-     * @param {Object} ruleObj
-     * A rule definition object mapping style names to their respective values.
-     */
-
     art.css =
-    function (selector, ruleObj)
+    function (selectors, ruleObj)
     {
-        var ruleStr = formatRule(selector, ruleObj);
+        var ruleStr = formatRule(selectors, ruleObj);
         addRule(ruleStr);
     };
-
-    /**
-     * Creates a new CSS keyframes rule and adds it to the document.
-     *
-     * @function art.css.keyframes
-     *
-     * @param {string} identifier
-     * The new keyframes rule identifier.
-     *
-     * @param {Object} ruleObj
-     * An object mapping selectors to rule definition objects.
-     * Rule definition objects map style names to their respective values.
-     *
-     * @returns {boolean}
-     * `true` on success; otherwise, `false`.
-     */
 
     art.css.keyframes =
     (function ()
@@ -167,7 +101,7 @@
         else
         {
             keyframes =
-            function (identifier, ruleObj) // eslint-disable-line no-unused-vars
+            function (identifier, ruleObjMap) // eslint-disable-line no-unused-vars
             {
                 return false;
             };
@@ -175,9 +109,9 @@
         }
         ruleStrBase += 'keyframes ';
         keyframes =
-        function (identifier, ruleObj)
+        function (identifier, ruleObjMap)
         {
-            var ruleDefs = createRuleDefs(ruleObj, formatRule);
+            var ruleDefs = createRuleDefs(ruleObjMap, formatRule);
             var ruleStr = ruleStrBase + identifier + '{' + ruleDefs.join('') + '}';
             addRule(ruleStr);
             return true;
@@ -200,7 +134,7 @@
     function createRuleDefs(ruleObj, callback)
     {
         var ruleDefs =
-        Object.keys(ruleObj).map
+        _Object.keys(ruleObj).map
         (
             function (ruleName)
             {
@@ -212,7 +146,7 @@
         return ruleDefs;
     }
 
-    function formatRule(selector, ruleObj)
+    function formatRule(selectors, ruleObj)
     {
         var ruleDefs =
         createRuleDefs
@@ -224,7 +158,7 @@
                 return ruleDef;
             }
         );
-        var ruleStr = selector + '{' + ruleDefs.join(';') + '}';
+        var ruleStr = selectors + '{' + ruleDefs.join(';') + '}';
         return ruleStr;
     }
 

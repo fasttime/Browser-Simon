@@ -26,12 +26,12 @@ task
             {
                 src: '*.js',
                 envs: 'node',
-                parserOptions: { ecmaVersion: 8 },
+                parserOptions: { ecmaVersion: 9 },
             },
             {
                 src: 'src/*.js',
                 envs: 'browser',
-                parserOptions: { ecmaVersion: 8 },
+                parserOptions: { ecmaVersion: 9 },
                 rules: { strict: ['error', 'function'] },
             },
         );
@@ -42,25 +42,13 @@ task
 task
 (
     'make-art',
-    callback =>
+    async () =>
     {
-        const fs = require('fs');
-        const makeArt = require('art-js');
+        const { promise }               = require('art-js');
+        const { promises: { mkdir } }   = require('fs');
 
-        fs.mkdir
-        (
-            'tmp-src',
-            error =>
-            {
-                if (error && error.code !== 'EEXIST')
-                    callback(error);
-                else
-                {
-                    makeArt.async
-                    ('tmp-src/art.js', { css: { keyframes: true }, on: true }, callback);
-                }
-            },
-        );
+        await mkdir('tmp-src', { recursive: true });
+        await promise('tmp-src/art.js', { css: { keyframes: true }, on: true });
     },
 );
 
@@ -82,23 +70,16 @@ task
     'closure-compiler',
     () =>
     {
-        const compiler = require('google-closure-compiler').gulp();
+        const compiler = require('google-closure-compiler');
 
-        const stream =
-        src('dist/simon.js')
-        .pipe
-        (
-            compiler
-            (
-                {
-                    compilationLevel: 'ADVANCED',
-                    jsOutputFile: 'simon.min.js',
-                    rewritePolyfills: false,
-                    warningLevel: 'QUIET',
-                },
-            ),
-        )
-        .pipe(dest('dist'));
+        const compilerOpts =
+        {
+            compilationLevel: 'ADVANCED',
+            jsOutputFile: 'simon.min.js',
+            rewritePolyfills: false,
+            warningLevel: 'QUIET',
+        };
+        const stream = src('dist/simon.js').pipe(compiler.gulp()(compilerOpts)).pipe(dest('dist'));
         return stream;
     },
 );
@@ -106,25 +87,14 @@ task
 task
 (
     'jscrewit',
-    callback =>
+    async () =>
     {
-        const JScrewIt = require('jscrewit');
-        const fs = require('fs');
+        const { encode }                            = require('jscrewit');
+        const { promises: { readFile, writeFile } } = require('fs');
 
-        fs.readFile
-        (
-            'dist/simon.min.js',
-            (error, data) =>
-            {
-                if (error)
-                    callback(error);
-                else
-                {
-                    const output = JScrewIt.encode(data, { features: 'COMPACT' });
-                    fs.writeFile('dist/simon.screwed.js', output, callback);
-                }
-            },
-        );
+        const data = await readFile('dist/simon.min.js');
+        const output = encode(data, { features: 'COMPACT' });
+        await writeFile('dist/simon.screwed.js', output);
     },
 );
 
