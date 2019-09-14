@@ -7,9 +7,11 @@ task
     'clean',
     async () =>
     {
-        const del = require('del');
+        const { promises: { rmdir } } = require('fs');
 
-        await del(['dist', 'tmp-src']);
+        const paths = ['.tmp-src', 'dist'];
+        const rmdirOpts = { recursive: true };
+        await Promise.all(paths.map(path => rmdir(path, rmdirOpts)));
     },
 );
 
@@ -31,8 +33,7 @@ task
             {
                 src: 'src/*.js',
                 envs: 'browser',
-                parserOptions: { ecmaVersion: 9 },
-                rules: { strict: ['error', 'function'] },
+                parserOptions: { ecmaVersion: 9, sourceType: 'module' },
             },
         );
         return stream;
@@ -47,27 +48,28 @@ task
         const { promise }               = require('art-js');
         const { promises: { mkdir } }   = require('fs');
 
-        await mkdir('tmp-src', { recursive: true });
-        await promise('tmp-src/art.js', { css: { keyframes: true }, on: true });
+        await mkdir('.tmp-src', { recursive: true });
+        await promise('.tmp-src/art.js', { css: { keyframes: true }, on: true });
     },
 );
 
 task
 (
-    'concat',
-    () =>
+    'bundle',
+    async () =>
     {
-        const concat = require('gulp-concat');
+        const { rollup } = require('rollup');
 
-        const stream =
-        src(['tmp-src/art.js', 'src/main.js']).pipe(concat('simon.js')).pipe(dest('dist'));
-        return stream;
+        const inputOpts = { input: 'src/main.js' };
+        const bundle = await rollup(inputOpts);
+        const outputOpts = { file: 'dist/simon.js', format: 'iife' };
+        await bundle.write(outputOpts);
     },
 );
 
 task
 (
-    'closure-compiler',
+    'minify',
     () =>
     {
         const compiler = require('google-closure-compiler');
@@ -98,8 +100,4 @@ task
     },
 );
 
-task
-(
-    'default',
-    series(parallel('lint', 'clean'), 'make-art', 'concat', 'closure-compiler', 'jscrewit'),
-);
+task('default', series(parallel('lint', 'clean'), 'make-art', 'bundle', 'minify', 'jscrewit'));

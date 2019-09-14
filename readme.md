@@ -17,5 +17,5 @@ technical information used to create this software.
 
 [npm badge]: https://badge.fury.io/js/browser-simon.svg
 [npm url]: https://www.npmjs.com/package/browser-simon
-[play now]: https://gitcdn.xyz/repo/fasttime/Browser-Simon/master/index.html
-[play now image]: https://gitcdn.xyz/repo/fasttime/Browser-Simon/master/Play%20now!.svg
+[play now]: https://cdn.statically.io/gh/fasttime/Browser-Simon/master/index.html
+[play now image]: https://cdn.statically.io/gh/fasttime/Browser-Simon/master/Play%20now!.svg

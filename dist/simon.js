@@ -1,174 +1,172 @@
-(function ()
-{
+(function () {
     'use strict';
 
-    var _Object = Object;
-
-    var art =
-    window.art =
-    function (target)
-    {
-        var node;
-        if (target instanceof Node)
-            node = target;
-        else if (typeof target === 'function')
-            node = target.call(art);
-        else
-            node = document.createElement(target);
-        var argCount = arguments.length;
-        for (var index = 0; ++index < argCount;)
-        {
-            var arg = arguments[index];
-            if (arg instanceof Node)
-                node.appendChild(arg);
-            else if (arg != null)
-            {
-                var type = typeof arg;
-                if (type === 'object')
-                    deepAssign(node, arg);
-                else if (type === 'function')
-                    arg.call(art, node);
-                else
-                    node.appendChild(document.createTextNode(arg));
-            }
-        }
-        return node;
-    };
-
-    function deepAssign(target, source)
-    {
-        _Object.keys(source).forEach
-        (
-            function (name)
-            {
-                var descriptor = _Object.getOwnPropertyDescriptor(source, name);
-                if ('value' in descriptor)
-                {
-                    var value = descriptor.value;
-                    if (name in target && typeof value === 'object')
-                        deepAssign(target[name], value);
-                    else
-                        target[name] = value;
-                }
-                else
-                    _Object.defineProperty(target, name, descriptor);
-            }
-        );
-    }
-
-    art.on =
-    function (type, listener, useCapture)
-    {
-        var processEventListener =
-        createProcessEventListener(type, listener, useCapture, 'addEventListener');
-        return processEventListener;
-    };
-
-    function createProcessEventListener(type, listener, useCapture, methodName)
-    {
-        function processEventListener(target)
-        {
-            function callback(thisType)
-            {
-                target[methodName](thisType, listener, useCapture);
-            }
-
-            if (Array.isArray(type))
-                type.forEach(callback);
-            else
-                callback(type);
-        }
-
-        return processEventListener;
-    }
-
-    art.css =
-    function (selectors, ruleObj)
-    {
-        var ruleStr = formatRule(selectors, ruleObj);
-        addRule(ruleStr);
-    };
-
-    art.css.keyframes =
     (function ()
     {
-        var ruleStrBase;
-        var keyframes;
-        if (CSSRule.KEYFRAME_RULE)
-            ruleStrBase = '@';
-        else if (CSSRule.WEBKIT_KEYFRAME_RULE)
-            ruleStrBase = '@-webkit-';
-        else
+
+        var _Object = Object;
+
+        var art =
+        window.art =
+        function (target)
         {
-            keyframes =
-            function (identifier, ruleObjMap) // eslint-disable-line no-unused-vars
+            var node;
+            if (target instanceof Node)
+                node = target;
+            else if (typeof target === 'function')
+                node = target.call(art);
+            else
+                node = document.createElement(target);
+            var argCount = arguments.length;
+            for (var index = 0; ++index < argCount;)
             {
-                return false;
+                var arg = arguments[index];
+                if (arg instanceof Node)
+                    node.appendChild(arg);
+                else if (arg != null)
+                {
+                    var type = typeof arg;
+                    if (type === 'object')
+                        deepAssign(node, arg);
+                    else if (type === 'function')
+                        arg.call(art, node);
+                    else
+                        node.appendChild(document.createTextNode(arg));
+                }
+            }
+            return node;
+        };
+
+        function deepAssign(target, source)
+        {
+            _Object.keys(source).forEach
+            (
+                function (name)
+                {
+                    var descriptor = _Object.getOwnPropertyDescriptor(source, name);
+                    if ('value' in descriptor)
+                    {
+                        var value = descriptor.value;
+                        if (name in target && typeof value === 'object')
+                            deepAssign(target[name], value);
+                        else
+                            target[name] = value;
+                    }
+                    else
+                        _Object.defineProperty(target, name, descriptor);
+                }
+            );
+        }
+
+        art.on =
+        function (type, listener, useCapture)
+        {
+            var processEventListener =
+            createProcessEventListener(type, listener, useCapture, 'addEventListener');
+            return processEventListener;
+        };
+
+        function createProcessEventListener(type, listener, useCapture, methodName)
+        {
+            function processEventListener(target)
+            {
+                function callback(thisType)
+                {
+                    target[methodName](thisType, listener, useCapture);
+                }
+
+                if (Array.isArray(type))
+                    type.forEach(callback);
+                else
+                    callback(type);
+            }
+
+            return processEventListener;
+        }
+
+        art.css =
+        function (selectors, ruleObj)
+        {
+            var ruleStr = formatRule(selectors, ruleObj);
+            addRule(ruleStr);
+        };
+
+        art.css.keyframes =
+        (function ()
+        {
+            var ruleStrBase;
+            var keyframes;
+            if ('KEYFRAME_RULE' in CSSRule)
+                ruleStrBase = '@';
+            else if ('WEBKIT_KEYFRAME_RULE' in CSSRule)
+                ruleStrBase = '@-webkit-';
+            else
+            {
+                keyframes =
+                function (identifier, ruleObjMap) // eslint-disable-line no-unused-vars
+                {
+                    return false;
+                };
+                return keyframes;
+            }
+            ruleStrBase += 'keyframes ';
+            keyframes =
+            function (identifier, ruleObjMap)
+            {
+                var ruleDefs = createRuleDefs(ruleObjMap, formatRule);
+                var ruleStr = ruleStrBase + identifier + '{' + ruleDefs.join('') + '}';
+                addRule(ruleStr);
+                return true;
             };
             return keyframes;
         }
-        ruleStrBase += 'keyframes ';
-        keyframes =
-        function (identifier, ruleObjMap)
+        )();
+
+        function addRule(ruleStr)
         {
-            var ruleDefs = createRuleDefs(ruleObjMap, formatRule);
-            var ruleStr = ruleStrBase + identifier + '{' + ruleDefs.join('') + '}';
-            addRule(ruleStr);
-            return true;
-        };
-        return keyframes;
+            if (!styleSheet)
+            {
+                var style = art('STYLE');
+                art(document.head, style);
+                styleSheet = style.sheet;
+            }
+            styleSheet.insertRule(ruleStr, styleSheet.cssRules.length);
+        }
+
+        function createRuleDefs(ruleObj, callback)
+        {
+            var ruleDefs =
+            _Object.keys(ruleObj).map
+            (
+                function (ruleName)
+                {
+                    var ruleValue = ruleObj[ruleName];
+                    var ruleDef = callback(ruleName, ruleValue);
+                    return ruleDef;
+                }
+            );
+            return ruleDefs;
+        }
+
+        function formatRule(selectors, ruleObj)
+        {
+            var ruleDefs =
+            createRuleDefs
+            (
+                ruleObj,
+                function (ruleName, ruleValue)
+                {
+                    var ruleDef = ruleName + ':' + ruleValue;
+                    return ruleDef;
+                }
+            );
+            var ruleStr = selectors + '{' + ruleDefs.join(';') + '}';
+            return ruleStr;
+        }
+
+        var styleSheet;
     }
     )();
-
-    function addRule(ruleStr)
-    {
-        if (!styleSheet)
-        {
-            var style = art('STYLE');
-            art(document.head, style);
-            styleSheet = style.sheet;
-        }
-        styleSheet.insertRule(ruleStr, styleSheet.cssRules.length);
-    }
-
-    function createRuleDefs(ruleObj, callback)
-    {
-        var ruleDefs =
-        _Object.keys(ruleObj).map
-        (
-            function (ruleName)
-            {
-                var ruleValue = ruleObj[ruleName];
-                var ruleDef = callback(ruleName, ruleValue);
-                return ruleDef;
-            }
-        );
-        return ruleDefs;
-    }
-
-    function formatRule(selectors, ruleObj)
-    {
-        var ruleDefs =
-        createRuleDefs
-        (
-            ruleObj,
-            function (ruleName, ruleValue)
-            {
-                var ruleDef = ruleName + ':' + ruleValue;
-                return ruleDef;
-            }
-        );
-        var ruleStr = selectors + '{' + ruleDefs.join(';') + '}';
-        return ruleStr;
-    }
-
-    var styleSheet;
-}
-)();
-
-(() =>
-{
-    'use strict';
 
     // Timer //
 
@@ -214,8 +212,7 @@
     {
         const id = newTimerId();
         timerDataMap.set(id, { callback, once: true });
-        timerWorker.postMessage
-        ({ [ACTION_KEY]: ACTION_VALUE_START, [ID_KEY]: id, [DELAY_KEY]: delay });
+        timerWorker.postMessage({ [ACTION_KEY]: ACTION_VALUE_START, [ID_KEY]: id, [DELAY_KEY]: delay });
         return id;
     }
 
@@ -445,6 +442,7 @@
 
     function init()
     {
+        const document = this;
         document.title = 'Browser Simon';
         art
         (
@@ -457,7 +455,6 @@
             art.on('mouseup', handleOffEvents),
             art.on('touchend', handleOffEvents),
         );
-
         const header =
         art
         (
@@ -467,7 +464,6 @@
             art('BR'),
             art('SPAN', { style: { fontSize: '150%' } }, 'sımon'),
         );
-
         tileBoard = art('DIV');
         const gameBoard =
         art
@@ -477,9 +473,9 @@
             '.tile',
             {
                 'box-shadow': '5px 5px 2.5px #ABABAB',
-                position: 'absolute',
-                width: '145px',
-                height: '145px',
+                'position': 'absolute',
+                'width': '145px',
+                'height': '145px',
             },
         );
         art.css('.down', { margin: '3px 0 0 3px' });
@@ -559,19 +555,51 @@
         );
         keyframesRuleObj['100%'] = keyframesRuleObj['0%'];
         art.css.keyframes('start', keyframesRuleObj);
-
+        const startLabel =
+        art
+        (
+            'DIV',
+            {
+                className: 'round',
+                style:
+                {
+                    alignItems: 'center',
+                    background: '#B0C4DE',
+                    flexGrow: '1',
+                    font: 'bold 20px Verdana',
+                    justifyContent: 'center',
+                    letterSpacing: '1px',
+                },
+            },
+            'Start',
+        );
         const startButton =
-        art('DIV', { className: 'start' }, 'Start', art.on('click', handleStartButtonClick));
+        art
+        (
+            'DIV',
+            {
+                className: 'round startButton',
+                style:
+                {
+                    boxShadow: '0 0 0 3px #888',
+                    color: '#434A54',
+                    cursor: 'pointer',
+                    flexGrow: '1',
+                    padding: '2px',
+                },
+            },
+            art.on('click', handleStartButtonClick),
+            startLabel,
+        );
         const startLayer =
         art
         (
             'DIV',
-            { className: 'startLayer' },
+            { className: 'round startLayer' },
             {
                 style:
                 {
-                    background: '#888',
-                    borderWidth: '1px',
+                    padding: '4px',
                     position: 'absolute',
                     left: '100px',
                     top: '100px',
@@ -584,39 +612,16 @@
         art(gameBoard, startLayer);
         art.css
         (
-            '.start',
-            {
-                'align-items': 'center',
-                'background': '#B0C4DE',
-                'border-width': '2px',
-                'color': '#434A54',
-                'cursor': 'pointer',
-                'display': 'flex',
-                'font': 'bold 20px Verdana',
-                'justify-content': 'center',
-                'letter-spacing': '1px',
-                'margin': '3px',
-                'position': 'fixed', // Workaround for a rendering bug in Safari.
-                'width': '92px',
-                'height': '92px',
-            },
+            '.startButton,.startLayer',
+            { 'background': 'linear-gradient(135deg,#DDD,#AAA)' },
         );
         art.css
         (
-            '.start:active',
-            { 'animation': 'start 1.5s infinite', 'border-color': '#AAA #DDD #DDD #AAA' },
+            '.startButton:active',
+            { 'animation': 'start 1.5s infinite', 'background': 'linear-gradient(315deg,#DDD,#AAA)' },
         );
         art.css
-        (
-            '.start,.startLayer',
-            {
-                'border-color': '#DDD #AAA #AAA #DDD',
-                'border-radius': '100%',
-                'border-style': 'solid',
-                'box-sizing': 'border-box',
-            },
-        );
-
+        ('.round', { 'border-radius': '100%', 'box-sizing': 'border-box', 'display': 'flex' });
         roundSpan = art('SPAN', '—');
         statusBlock = art('H2', { style: { textAlign: 'center' } }, 'Hello');
         const footer =
@@ -637,7 +642,6 @@
             statusBlock,
         );
         art.css('h2', { display: 'table-cell', font: '24px Verdana' });
-
         art
         (
             document.body,
@@ -752,5 +756,5 @@
     }
 
     art(document, art.on('DOMContentLoaded', init));
-}
-)();
+
+}());
