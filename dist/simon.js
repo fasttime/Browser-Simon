@@ -331,9 +331,18 @@
 
     // Square Wave Beep //
 
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
+    let audioCtx = null;
     let stopBeepTask = null;
+
+    function initBeep()
+    {
+        if (!audioCtx)
+        {
+            const propName = 'AudioContext' in window ? 'AudioContext' : 'webkitAudioContext';
+            audioCtx = new window[propName]();
+            audioCtx.createOscillator();
+        }
+    }
 
     function startBeep(frequency)
     {
@@ -708,6 +717,7 @@
                 setBoardStatus(true, 'Play', '');
             },
         );
+        initBeep();
     }
 
     function randomTile()
