@@ -1,6 +1,6 @@
 {
   "name": "browser-simon",
-  "version": "0.2.7",
+  "version": "0.3.0",
   "description": "Simon memory game for the browser",
   "keywords": [
     "game",
@@ -14,6 +14,7 @@
   "files": [
     "Play now!.svg",
     "dist/*.js",
+    "favicon.ico",
     "index.html"
   ],
   "repository": {
@@ -27,7 +28,7 @@
     "art-js": "~0.9.1",
     "google-closure-compiler": "~20190909.0.0",
     "gulp": "~4.0.2",
-    "gulp-fasttime-lint": "~0.16.0",
+    "gulp-fasttime-lint": "~0.16.1",
     "gulp-tap": "~2.0.0",
     "jscrewit": "~2.10.1",
     "rollup": "~1.21.3"
