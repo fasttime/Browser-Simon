@@ -28,7 +28,8 @@
     "google-closure-compiler": "~20190909.0.0",
     "gulp": "~4.0.2",
     "gulp-fasttime-lint": "~0.16.0",
+    "gulp-tap": "~2.0.0",
     "jscrewit": "~2.10.1",
-    "rollup": "~1.21.2"
+    "rollup": "~1.21.3"
   }
 }

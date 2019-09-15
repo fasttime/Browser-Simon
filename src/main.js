@@ -1,5 +1,7 @@
 import '../.tmp-src/art';
 
+import WORKER_SRC from '../.tmp-src/worker';
+
 // Timer //
 
 const ACTION_KEY    = 'action';
@@ -7,7 +9,7 @@ const DELAY_KEY     = 'delay';
 const ID_KEY        = 'id';
 const INTERVAL_KEY  = 'interval';
 
-const ACTION_VALUE_REPEAT   = 'REPAEAT';
+const ACTION_VALUE_REPEAT   = 'REPEAT';
 const ACTION_VALUE_START    = 'START';
 const ACTION_VALUE_STOP     = 'STOP';
 
@@ -55,31 +57,7 @@ function stopTimer(id)
 }
 
 {
-    const script =
-    'let idMap=new Map;' +
-    'onmessage=' +
-    'event=>' +
-    '{' +
-        'let notify=()=>postMessage({id});' +
-        'let startDelay=' +
-        `callback=>idMap.set(id,setTimeout(()=>{callback();notify()},data.${DELAY_KEY}));` +
-        `let{data}=event,id=data.${ID_KEY};` +
-        `switch(data.${ACTION_KEY})` +
-        '{' +
-        `case"${ACTION_VALUE_START}":` +
-            'startDelay(()=>idMap.delete(id));' +
-            'break;' +
-        `case"${ACTION_VALUE_REPEAT}":` +
-            `startDelay(()=>idMap.set(id,setInterval(notify,data.${INTERVAL_KEY})));` +
-            'break;' +
-        `case"${ACTION_VALUE_STOP}":` +
-            'let nativeId=idMap.get(id);' +
-            'idMap.delete(id);' +
-            'clearTimeout(nativeId);' +
-            'break;' +
-        '}' +
-    '}';
-    const blob = new Blob([script]);
+    const blob = new Blob([WORKER_SRC]);
     const strUrl = URL.createObjectURL(blob);
     timerWorker = new Worker(strUrl);
 }
@@ -102,69 +80,74 @@ event =>
 
 const tasks = new Set();
 
-function Task(job)
+class Task
 {
-    this.job = job;
-    tasks.add(this);
-}
-
-Task.create =
-job =>
-{
-    const task = new Task(job);
-    return task;
-};
-
-Task.doAll =
-() =>
-{
-    tasks.forEach
-    (
-        task =>
-        {
-            task.do();
-        },
-    );
-};
-
-Task.prototype.do =
-function ()
-{
-    const { job } = this;
-    if (job)
+    constructor(job)
     {
-        stopTimer(this.timerId);
-        delete this.timerId;
-        this.job = undefined;
-        tasks.delete(this);
-        job();
+        this.job = job;
+        tasks.add(this);
     }
-};
 
-Task.prototype.doAfter =
-function (millisecs)
-{
-    const task = this;
-    const { job } = task;
-    if (job)
+    static create(job)
     {
-        stopTimer(task.timerId);
-        task.timerId =
-        startTimer
+        const task = new Task(job);
+        return task;
+    }
+
+    static doAll()
+    {
+        tasks.forEach
         (
-            () =>
+            task =>
             {
                 task.do();
             },
-            millisecs,
         );
     }
-};
+
+    do()
+    {
+        const { job } = this;
+        if (job)
+        {
+            stopTimer(this.timerId);
+            delete this.timerId;
+            this.job = undefined;
+            tasks.delete(this);
+            job();
+        }
+    }
+
+    doAfter(millisecs)
+    {
+        const task = this;
+        const { job } = task;
+        if (job)
+        {
+            stopTimer(task.timerId);
+            task.timerId =
+            startTimer
+            (
+                () =>
+                {
+                    task.do();
+                },
+                millisecs,
+            );
+        }
+    }
+}
 
 // Square Wave Beep //
 
 let audioCtx = null;
 let stopBeepTask = null;
+
+function createOscillator()
+{
+    const oscillator = audioCtx.createOscillator();
+    return oscillator;
+}
 
 function initBeep()
 {
@@ -172,7 +155,7 @@ function initBeep()
     {
         const propName = 'AudioContext' in window ? 'AudioContext' : 'webkitAudioContext';
         audioCtx = new window[propName]();
-        audioCtx.createOscillator();
+        createOscillator();
     }
 }
 
@@ -180,7 +163,7 @@ function startBeep(frequency)
 {
     if (stopBeepTask)
         stopBeepTask.do();
-    const oscillator = audioCtx.createOscillator();
+    const oscillator = createOscillator();
     oscillator.connect(audioCtx.destination);
     oscillator.frequency.value = frequency;
     oscillator.type = 'square';
@@ -279,6 +262,7 @@ function handleStartButtonClick()
     Task.doAll();
     sequence = [];
     nextRound();
+    initBeep();
 }
 
 function init()
@@ -549,7 +533,6 @@ function nextRound()
             setBoardStatus(true, 'Play', '');
         },
     );
-    initBeep();
 }
 
 function randomTile()
